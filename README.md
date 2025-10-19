@@ -32,11 +32,15 @@ cd holehe/
 python3 setup.py install
 ```
 
-### With Docker
-
+### With Docker (To keep things comparmentalized)
+*<font style="color: #f00;">Note docker-buildx required</font>*
 ```bash
-docker build . -t my-holehe-image
+docker buildx build -t my-holehe-image .
 docker run my-holehe-image holehe test@gmail.com
+```
+You can then create an alias by adding the following to your .bashrc/.zshrc etc.
+```ini
+alias holehe='docker run my-holehe-image holehe'
 ```
 
 ## Quick Start

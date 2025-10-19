@@ -1,4 +1,5 @@
-FROM python:3.11-slim-bullseye
+FROM python:3.13.9-slim-trixie
 COPY . /opt/holehe
 WORKDIR /opt/holehe
-RUN python3 setup.py install
+RUN pip3 install --upgrade pip && \
+    pip3 install .
