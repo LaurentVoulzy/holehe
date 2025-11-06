@@ -1,0 +1,51 @@
+# Environment
+.env
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Data and cache
+data/
+cache/
+*.csv
+*.json
+*.db
+
+# Reports (unless you want to commit them)
+reports/
+*.md
+!README.md
+!QUICKSTART.md
+!.env.example
+
+# Logs
+*.log
