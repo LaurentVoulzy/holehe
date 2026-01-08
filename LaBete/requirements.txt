@@ -1,0 +1,37 @@
+# LA BÊTE - Requirements Python 3.12+
+# Système Dual Forex + Crypto Ultra-Sécurisé
+
+# Framework Web (API Guardian)
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Bot Telegram
+python-telegram-bot==20.7
+
+# HTTP Requests
+requests==2.31.0
+
+# Base de données SQLite (inclus dans Python)
+# Pas besoin d'installer
+
+# Data & Time
+python-dateutil==2.8.2
+
+# Logging amélioré (optionnel)
+colorlog==6.8.0
+
+# Configuration
+python-dotenv==1.0.0
+
+# OPTIONNEL: Machine Learning (si activé dans config)
+# numpy==1.26.2
+# pandas==2.1.4
+# scikit-learn==1.3.2
+
+# OPTIONNEL: Dashboard Web avancé
+# plotly==5.18.0
+# dash==2.14.2
+
+# OPTIONNEL: Calendrier économique
+# beautifulsoup4==4.12.2
+# lxml==4.9.3
