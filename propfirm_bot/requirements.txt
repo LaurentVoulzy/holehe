@@ -1,0 +1,14 @@
+# PropFirm Bot Requirements
+
+# Bot Telegram
+python-telegram-bot>=20.0
+
+# Visualisation
+matplotlib>=3.5.0
+seaborn>=0.12.0
+
+# Base de données
+# SQLite est inclus dans Python standard library
+
+# Optionnel - pour de meilleures performances
+numpy>=1.21.0
