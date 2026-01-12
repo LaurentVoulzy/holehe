@@ -86,9 +86,14 @@ CRYPTO_CONFIG = {
     "pairs": ["BTCUSD", "ETHUSD"],
     "primary_pair": "BTCUSD",
 
+    # Compte MT5
+    "mt5_account": 1512301052,  # Compte FTMO Demo (même compte que Forex)
+    "mt5_password": "15x*Js?w@",  # Mot de passe FTMO (lecture seule)
+    "mt5_server": "FTMO-Demo",  # Serveur FTMO
+
     # Capital et risque
-    "account_balance": 50000,  # RaiseMyFunds 50K$
-    "currency": "USD",
+    "account_balance": 40000,  # FTMO 40K€
+    "currency": "EUR",
     "risk_per_trade": 0.002,  # 0.2% par trade (plus volatile)
     "max_daily_risk": 0.008,  # 0.8% max par jour
     "max_weekly_risk": 0.025,  # 2.5% max par semaine
@@ -128,8 +133,8 @@ CRYPTO_CONFIG = {
 
     # Kill Switch
     "kill_switch": {
-        "max_daily_loss": 500,  # $
-        "max_drawdown": 3500,   # $
+        "max_daily_loss": 400,  # €
+        "max_drawdown": 3000,   # €
         "min_win_rate": 0.40,   # 40%
         "min_trades_for_winrate": 10,
     },
