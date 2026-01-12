@@ -453,9 +453,10 @@ def calculate_position_size(
 # ========================================
 # CONSTANTES GLOBALES
 # ========================================
-VERSION = "6.0 Ultimate"
+VERSION = "7.0 Ultimate - FTMO Integration"
 AUTHOR = "Yann - La Bête"
 CREATED_DATE = "2025-01-08"
+UPDATED_DATE = "2025-01-12"
 PYTHON_VERSION = "3.12+"
 
 # Message de bienvenue

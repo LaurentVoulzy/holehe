@@ -1,17 +1,18 @@
 //+------------------------------------------------------------------+
-//|                                La_Bete_FOREX_V6_Ultimate.mq5       |
+//|                                La_Bete_FOREX_V7_Ultimate.mq5       |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| SYSTÈME FOREX ULTRA-SÉCURISÉ POUR PROP FIRM                         |
+//| SYSTÈME FOREX ULTRA-SÉCURISÉ POUR PROP FIRM - FTMO INTÉGRATION     |
 //| - Smart Money Concepts (OB, FVG, BOS, CHoCH)                        |
 //| - Confluence Scoring 100pts                                         |
 //| - 7 Niveaux de Protection Anti-Cramage                              |
 //| - API Python Guardian                                                |
 //| - Triple TP / Trailing / Break Even                                 |
+//| - Intégration FTMO 40K€                                             |
 //+------------------------------------------------------------------+
 
 #property copyright "Yann - La Bête"
-#property version   "6.00"
+#property version   "7.00"
 #property strict
 
 //+------------------------------------------------------------------+
