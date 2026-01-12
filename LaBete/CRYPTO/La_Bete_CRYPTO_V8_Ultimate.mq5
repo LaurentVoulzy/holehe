@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                La_Bete_CRYPTO_V7_Ultimate.mq5     |
+//|                                La_Bete_CRYPTO_V8_Ultimate.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
 //| SYSTÈME CRYPTO ULTRA-SÉCURISÉ POUR PROP FIRM - FTMO INTÉGRATION    |
@@ -10,10 +10,11 @@
 //| - Triple TP / Trailing / Break Even                                 |
 //| - Whale Detection / Funding Rate / Weekend Protection               |
 //| - Intégration FTMO 40K€                                             |
+//| - Economic Calendar Forex Factory                                   |
 //+------------------------------------------------------------------+
 
 #property copyright "Yann - La Bête"
-#property version   "7.00"
+#property version   "8.00"
 #property strict
 
 //+------------------------------------------------------------------+

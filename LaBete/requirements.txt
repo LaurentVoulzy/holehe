@@ -16,6 +16,7 @@ requests==2.31.0
 
 # Data & Time
 python-dateutil==2.8.2
+pytz==2024.1
 
 # Logging amélioré (optionnel)
 colorlog==6.8.0

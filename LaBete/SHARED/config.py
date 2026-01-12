@@ -460,7 +460,7 @@ def calculate_position_size(
 # ========================================
 # CONSTANTES GLOBALES
 # ========================================
-VERSION = "7.0 Ultimate - FTMO Integration"
+VERSION = "8.0 Ultimate - Economic Calendar + XAUUSD"
 AUTHOR = "Yann - La Bête"
 CREATED_DATE = "2025-01-08"
 UPDATED_DATE = "2025-01-12"
