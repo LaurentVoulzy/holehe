@@ -25,6 +25,8 @@ FOREX_CONFIG = {
 
     # Compte MT5
     "mt5_account": 1512301052,  # Compte FTMO Demo
+    "mt5_password": "WK$4*55e$6@!",  # Mot de passe FTMO (lecture seule)
+    "mt5_server": "FTMO-Demo",  # Serveur FTMO
 
     # Capital et risque
     "account_balance": 40000,  # FTMO 40K€
