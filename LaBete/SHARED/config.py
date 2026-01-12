@@ -23,6 +23,9 @@ FOREX_CONFIG = {
     "pairs": ["EURUSD", "GBPUSD", "USDJPY"],
     "primary_pair": "EURUSD",
 
+    # Compte MT5
+    "mt5_account": 1512301052,  # Compte FTMO Demo
+
     # Capital et risque
     "account_balance": 40000,  # FTMO 40K€
     "currency": "EUR",
