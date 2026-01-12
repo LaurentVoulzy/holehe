@@ -20,7 +20,7 @@ USER_EMAIL = "kykylou30@gmail.com"
 # ========================================
 FOREX_CONFIG = {
     # Paires tradées
-    "pairs": ["EURUSD", "GBPUSD", "USDJPY"],
+    "pairs": ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD"],
     "primary_pair": "EURUSD",
 
     # Compte MT5
@@ -44,10 +44,17 @@ FOREX_CONFIG = {
     "max_open_positions": 2,
     "max_consecutive_losses": 3,
 
-    # Stop Loss / Take Profit
+    # Stop Loss / Take Profit (Paires Forex standard)
     "sl_min_pips": 50,
     "sl_max_pips": 150,
     "atr_multiplier_sl": 1.5,
+
+    # Stop Loss / Take Profit spécifique XAUUSD (Gold)
+    "xauusd_sl_min_pips": 200,     # 200 pips min pour Gold ($20)
+    "xauusd_sl_max_pips": 800,     # 800 pips max pour Gold ($80)
+    "xauusd_atr_multiplier": 2.0,  # ATR x2 pour Gold (plus volatile)
+    "xauusd_risk_percent": 0.0025, # 0.25% pour Gold (légèrement réduit)
+
     "tp_levels": [
         {"ratio": 2.0, "close_percent": 50},  # TP1: 1:2, ferme 50%
         {"ratio": 3.0, "close_percent": 30},  # TP2: 1:3, ferme 30%
