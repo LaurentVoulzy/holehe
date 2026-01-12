@@ -115,9 +115,9 @@ struct SignalData {
 int OnInit()
 {
     Print("╔══════════════════════════════════════════════════════════╗");
-    Print("║          💰 LA BÊTE CRYPTO V6 ULTIMATE 💰                ║");
+    Print("║          💰 LA BÊTE CRYPTO V8 ULTIMATE 💰                ║");
     Print("║     Système Ultra-Sécurisé pour Prop Firm Challenges     ║");
-    Print("║         + Whale Detection + Weekend Protection           ║");
+    Print("║   + Whale Detection + Weekend + Economic Calendar        ║");
     Print("╚══════════════════════════════════════════════════════════╝");
 
     // Configuration du trade

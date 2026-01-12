@@ -108,8 +108,9 @@ struct SignalData {
 int OnInit()
 {
     Print("╔══════════════════════════════════════════════════════════╗");
-    Print("║          🐺 LA BÊTE FOREX V6 ULTIMATE 🐺                 ║");
+    Print("║          🐺 LA BÊTE FOREX V8 ULTIMATE 🐺                 ║");
     Print("║     Système Ultra-Sécurisé pour Prop Firm Challenges     ║");
+    Print("║   Economic Calendar + XAUUSD Support                     ║");
     Print("╚══════════════════════════════════════════════════════════╝");
 
     // Configuration du trade
