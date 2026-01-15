@@ -1,549 +1,573 @@
-# 🐺 LA BÊTE - Système Trading Dual Forex + Crypto
+# 🐺 LA BÊTE - SYSTÈME PROP FIRM PROFESSIONNEL
 
-## **Version 6.0 Ultimate - Ultra-Sécurisé pour Prop Firm Challenges**
+**Système de trading automatisé V8 organisé par devise avec contrôle Telegram**
 
 ![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
 ![MT5](https://img.shields.io/badge/MT5-5.0-green.svg)
-![License](https://img.shields.io/badge/license-Private-red.svg)
+![Telegram](https://img.shields.io/badge/Telegram-Bot-blue.svg)
+![FTMO](https://img.shields.io/badge/FTMO-Ready-green.svg)
 
 ---
 
-## 📖 PRÉSENTATION
+## ⚡ DÉMARRAGE RAPIDE
 
-**La Bête** est un système de trading automatisé **dual** (Forex + Crypto) conçu spécifiquement pour **réussir les challenges prop firm** (FTMO, RaiseMyFunds, The5ers, etc.) avec un niveau de sécurité maximum pour éviter de "cramer" les comptes.
+### 1. Double-cliquez sur `START_SYSTEM.bat`
 
-### ✨ Pourquoi "La Bête" ?
+### 2. Choisissez option [4] TOUT
 
-Après avoir échoué un challenge FTMO 40K€ le 30 décembre 2024 avec une perte de -3,229€ en une soirée pendant une période morte, ce système a été créé pour **NE PLUS JAMAIS revivre ça**.
+### 3. Ouvrez Telegram et tapez `/start`
 
-### 🎯 Objectif
+### 4. Chargez les bots sur MT5:
 
-**Trader de manière ultra-sécurisée** en respectant strictement les règles prop firm et en évitant TOUS les pièges psychologiques (revenge trading, overtrading, périodes dangereuses, etc.).
-
----
-
-## 🚀 FONCTIONNALITÉS PRINCIPALES
-
-### 📊 Analyse Technique Avancée
-
-#### Smart Money Concepts (SMC)
-- ✅ **Order Blocks** (OB+ et OB-) avec validation 3 pips
-- ✅ **Fair Value Gaps** (FVG+ et FVG-)
-- ✅ **Break of Structure** (BOS)
-- ✅ **Change of Character** (CHoCH)
-- ✅ **Liquidity Sweeps** detection
-- ✅ **Market Structure** analysis temps réel
-
-#### Indicateurs Multi-Timeframe
-- ✅ **EMA** 20/50/200 sur M30, H1, H4
-- ✅ **RSI 14** avec détection divergences
-- ✅ **MACD** (12,26,9) avec crossovers
-- ✅ **ATR** pour volatilité dynamique
-- ✅ **Support/Resistance** automatiques
-- ✅ **Previous High/Low** tracking
-
-#### Pattern Recognition
-- ✅ **Patterns chartistes**: double top/bottom, H&S, triangles, flags, wedges
-- ✅ **Patterns candlestick**: engulfing, pin bar, doji, morning/evening star
-- ✅ **Score de fiabilité** pour chaque pattern
+| Bot | Paire | Timeframe | Magic |
+|-----|-------|-----------|-------|
+| **La_Bete_EUR.mq5** | EURUSD | M30 | 666001 |
+| **La_Bete_GBP.mq5** | GBPUSD | M30 | 666002 |
+| **La_Bete_JPY.mq5** | USDJPY | M30 | 666003 |
+| **La_Bete_GOLD.mq5** | XAUUSD | M30 | 666004 |
+| **La_Bete_BTC.mq5** | BTCUSD | M30 | 777001 |
+| **La_Bete_ETH.mq5** | ETHUSD | M30 | 777002 |
 
 ---
 
-### 🎯 SYSTÈME DE CONFLUENCE (100 POINTS)
+## 📱 CONTRÔLE TELEGRAM
 
-Chaque signal est noté sur **100 points** avant validation:
-
-| Catégorie | Points Max | Critères |
-|-----------|------------|----------|
-| **Structure SMC** | 40 pts | Prix dans OB (20), FVG aligné (10), BOS+CHoCH (10) |
-| **Multi-Timeframe** | 25 pts | Alignement M30+H1+H4 (15), Trend strength (10) |
-| **Indicateurs** | 20 pts | EMA alignées (8), RSI favorable (6), MACD crossover (6) |
-| **Support/Resistance** | 10 pts | Bounce sur S/R (5), Previous High/Low (5) |
-| **Pattern** | 5 pts | Pattern détecté et validé (5) |
-
-**Confluence minimum requis:**
-- **Forex**: 90/100 ⚡
-- **Crypto**: 85/100 ⚡
-
----
-
-### 🛡️ 7 NIVEAUX DE PROTECTION ANTI-CRAMAGE
-
-#### **Niveau 1: Stop Loss Dynamique**
-- Basé sur ATR × 1.5 (Forex) / × 2.0 (Crypto)
-- Positionné sous/sur dernier swing
-- Sous/sur Order Block le plus proche
-- **Limites**: 50-150 pips (Forex), 200-1000$ BTC, 20-100$ ETH
-
-#### **Niveau 2: Triple Take Profit**
-- **TP1**: Risk:Reward 1:2 → Ferme **50%** de la position
-- **TP2**: Risk:Reward 1:3 → Ferme **30%** de la position
-- **TP3**: Risk:Reward 1:5 → Ferme **20%** de la position
-- Ajusté selon structure Support/Resistance
-
-#### **Niveau 3: Break Even Intelligent**
-- Activé à **50%** du chemin vers TP1
-- SL déplacé à Entry + 10 pips (Forex) / +0.5% (Crypto)
-- Protection profit **immédiate**
-
-#### **Niveau 4: Trailing Stop Structurel**
-- Activé **après TP1** atteint
-- Trail **50% de l'ATR** derrière swing low/high
-- **Jamais de recul** du SL
-
-#### **Niveau 5: Filtre News Économiques**
-- **ARRÊT 2h avant/après** news High Impact:
-  - FOMC, NFP, CPI, GDP, Interest Rate
-  - ECB, BOE, BOJ decisions
-  - Retail Sales, Employment data
-- API calendrier économique intégré
-- Détection automatique événements majeurs
-
-#### **Niveau 6: Anti-Revenge Trading**
-- Détection: **2 pertes** + trade **< 10 minutes**
-- **Kill Switch automatique** activé
-- **Pause forcée de 2 heures**
-- Notification Telegram immédiate
-
-#### **Niveau 7: Kill Switch Ultimate Multi-Triggers**
-
-Activation automatique si:
-- ❌ Perte journalière ≥ **-400€** (Forex) / **-500$** (Crypto)
-- ❌ Drawdown ≥ **-3,000€** (Forex) / **-3,500$** (Crypto)
-- ❌ Win rate < **35%** (Forex) / **40%** (Crypto) sur 15+ trades
-- ❌ **3 pertes consécutives**
-- ❌ **8+ trades/jour** (overtrading)
-- ❌ News High Impact dans **2h**
-- ❌ **Période morte** détectée
-- ❌ **Volatilité extrême** anormale
-
----
-
-### 🚫 PÉRIODES STRICTEMENT INTERDITES
-
-#### Calendrier Strict:
-- ❌ **24 déc - 3 jan** (Noël/Nouvel An) **← CRITICAL!**
-- ❌ **Pâques** (4 jours)
-- ❌ Jours fériés majeurs **US/UK/EU**
-- ❌ **Vendredi après 16h**
-- ❌ **Dimanche avant 23h**
-- ❌ **Avant/pendant/après news 🔴 High Impact**
-
-> ⚠️ **Leçon apprise:** Challenge FTMO cramé le 30 déc (période morte) = -3,229€ en une soirée.
-
----
-
-### 💰 SPÉCIFICITÉS CRYPTO
-
-Protections supplémentaires pour crypto:
-
-#### Volatilité
-- **ATR × 2** pour SL (vs × 1.5 forex)
-- **SL min/max**: BTC 200-1000$, ETH 20-100$
-- **Risque réduit**: 0.2% par trade (vs 0.3% forex)
-
-#### Filtres Spécifiques
-- 🐋 **Whale Activity Detection**: Volume > 300% moyenne
-- 📅 **Weekend Gap Protection**: Vendredi 20h - Dimanche 22h
-- 😱 **Fear & Greed Index** integration
-- 💸 **Funding Rate Analysis** (futures)
-- ₿ **BTC Dominance Check** (40-70%)
-
-#### Limites
-- **Max 2 trades/jour** (vs 3 forex)
-- **Risk:Reward min 1:3** (vs 1:2 forex)
-- **1 position max** ouverte simultanée
-
----
-
-## 🏗️ ARCHITECTURE TECHNIQUE
-
-### Structure du Système
+### Menu Principal
 
 ```
-LA BÊTE
-├─ FOREX (🐺)
-│  ├─ Bot MT5 (La_Bete_FOREX_V6_Ultimate.mq5)
-│  │  └─ Analyse SMC + Confluence → Signal
-│  │
-│  └─ Guardian Python (guardian_forex.py)
-│     ├─ API Flask :5000
-│     ├─ Validation signal (7 niveaux)
-│     ├─ Kill Switch monitoring
-│     └─ Database SQLite
-│
-├─ CRYPTO (💰)
-│  ├─ Bot MT5 (La_Bete_CRYPTO_V6_Ultimate.mq5)
-│  │  └─ Analyse SMC + Confluence → Signal
-│  │
-│  └─ Guardian Python (guardian_crypto.py)
-│     ├─ API Flask :5001
-│     ├─ Validation signal + filtres crypto
-│     ├─ Whale/Weekend/Funding checks
-│     └─ Database SQLite
-│
-└─ SHARED (🤖)
-   ├─ config.py (Configuration centrale)
-   ├─ telegram_bot.py (Contrôle dual)
-   └─ utils.py (Utilitaires)
+╔════════════════════════════════════╗
+║   🐺 LA BÊTE - PROP FIRM SYSTEM   ║
+╚════════════════════════════════════╝
+
+📱 CONTRÔLE PAR DEVISE
+
+[🇪🇺 EUR/USD]  [🇬🇧 GBP/USD]
+[🇯🇵 USD/JPY]  [🥇 GOLD]
+[₿ BTC/USD]    [Ξ ETH/USD]
+
+[📊 Vue Globale]  [⚙️ Contrôle Total]
 ```
 
-### Flux de Trading
+### Commandes Rapides
+
+- `/eur` - Menu EUR/USD
+- `/gbp` - Menu GBP/USD
+- `/jpy` - Menu USD/JPY
+- `/gold` - Menu GOLD
+- `/btc` - Menu BTC/USD
+- `/eth` - Menu ETH/USD
+
+### Par Devise - Menu Complet
 
 ```
-1. MT5 détecte setup (SMC + Confluence ≥ 90/100)
-                ↓
-2. MT5 calcule Signal (Entry, SL, TP1/2/3, Lot Size)
-                ↓
-3. MT5 envoie Signal → Guardian Python (HTTP POST)
-                ↓
-4. Guardian valide (7 niveaux protection)
-                ↓
-5a. ✅ APPROUVÉ → MT5 ouvre position
-5b. ❌ REJETÉ → MT5 ignore, log raison
-                ↓
-6. MT5 gère position (BE, Trailing, TP partiel)
-                ↓
-7. Fermeture → Guardian update stats → Check Kill Switch
-                ↓
-8. Notification Telegram (résultat + stats)
+🇪🇺 EUR/USD
+
+Magic Number: 666001
+Type: FOREX
+
+[📊 Stats]        [📈 Positions]
+[✅ Start]        [❌ Stop]
+[🔍 Analyse]      [📅 News]
+
+[⬅️ Retour]
 ```
 
----
-
-## 📱 BOT TELEGRAM - CONTRÔLE DUAL
-
-### Commandes Forex
-
-| Commande | Description |
-|----------|-------------|
-| `/forex_stats` | Statistiques Forex |
-| `/forex_positions` | Positions ouvertes Forex |
-| `/forex_stop` | Arrêter bot Forex (Kill Switch) |
-| `/forex_start` | Démarrer bot Forex |
-| `/forex_today` | Résumé journée Forex |
-
-### Commandes Crypto
-
-| Commande | Description |
-|----------|-------------|
-| `/crypto_stats` | Statistiques Crypto |
-| `/crypto_positions` | Positions ouvertes Crypto |
-| `/crypto_stop` | Arrêter bot Crypto (Kill Switch) |
-| `/crypto_start` | Démarrer bot Crypto |
-| `/crypto_today` | Résumé journée Crypto |
-
-### Commandes Globales
-
-| Commande | Description |
-|----------|-------------|
-| `/start` | Démarrer / Aide |
-| `/help` | Afficher l'aide complète |
-| `/stats` | Stats Forex + Crypto combinées |
-| `/stopall` | ⛔ ARRÊT D'URGENCE TOTAL |
-| `/startall` | Démarrer les 2 systèmes |
-| `/report` | Rapport complet détaillé |
-| `/risk` | Niveau de risque global |
-| `/closeall` | Fermer toutes positions |
-
-### Notifications Automatiques
-
-Le bot Telegram vous alerte automatiquement pour:
-
-- 🎯 **Nouveau signal détecté** (avec détails setup)
-- ✅ **Position ouverte** (Entry, SL, TPs)
-- 💰 **TP1/TP2/TP3 atteints** (+profit)
-- ⚠️ **Perte** (avec analyse pourquoi)
-- 🔴 **News proche** (2h avant)
-- 🚨 **Limites approchées** (drawdown, daily loss)
-- ⛔ **Kill Switch activé** (raisons détaillées)
-- 📊 **Rapport quotidien** (18h chaque jour)
-- 📈 **Rapport hebdomadaire** (vendredi soir)
+Chaque devise a:
+- **📊 Stats** - Performance en temps réel
+- **📈 Positions** - Positions ouvertes
+- **✅ Start** - Activer le bot
+- **❌ Stop** - Désactiver le bot
+- **🔍 Analyse** - Confluence + Certitude actuels
+- **📅 News** - Calendrier économique
 
 ---
 
-## ⚙️ CONFIGURATION
+## 🎯 ARCHITECTURE SYSTÈME
 
-### Comptes Prop Firm
-
-**FOREX:**
-- **Broker**: FTMO
-- **Challenge**: 40,000€
-- **Risque**: 0.3% par trade
-- **Max Daily Loss**: 400€
-- **Max Total Drawdown**: 3,000€
-
-**CRYPTO:**
-- **Broker**: RaiseMyFunds
-- **Compte**: 50,000$ (Account 1038450)
-- **Risque**: 0.2% par trade
-- **Max Daily Loss**: 500$
-- **Max Total Drawdown**: 3,500$
-
-### Paires Tradées
-
-**FOREX:**
-- ✅ EURUSD (principal)
-- ✅ GBPUSD
-- ✅ USDJPY
-
-**CRYPTO:**
-- ✅ BTCUSD
-- ✅ ETHUSD
-
-### Timeframes
-
-- **Principal**: M30 (analyse principale)
-- **Confirmation**: H1 + H4 (alignement)
-
----
-
-## 🚀 INSTALLATION
-
-### 📋 **[GUIDE COMPLET → INSTALLATION.md](INSTALLATION.md)**
-
-**Résumé rapide:**
-
-1. ✅ **Python 3.12+** installé
-2. ✅ **MT5** installé (2 instances: Forex + Crypto)
-3. ✅ Installer dépendances: `pip install -r requirements.txt`
-4. ✅ Configurer `config.py` (tokens, capital)
-5. ✅ Copier fichiers `.mq5` dans MT5
-6. ✅ Autoriser WebRequest dans MT5
-7. ✅ Lancer:
-   - `python guardian_forex.py`
-   - `python guardian_crypto.py`
-   - `python telegram_bot.py`
-8. ✅ Activer bots MT5 sur graphiques M30
-9. ✅ Tester avec `/start` dans Telegram
-
----
-
-## 📊 STATISTIQUES & MONITORING
-
-### Base de Données SQLite
-
-Chaque système maintient sa propre DB:
-
-**Tables:**
-- `trades`: Tous les trades (entry, exit, P&L, metadata)
-- `signals`: Tous les signaux (approuvés + rejetés avec raison)
-- `daily_stats`: Stats quotidiennes agrégées
-- `economic_news`: Calendrier économique
-
-### Métriques Trackées
-
-- ✅ Win Rate
-- ✅ Profit Factor
-- ✅ Max Drawdown
-- ✅ Average Win / Average Loss
-- ✅ Nombre de trades (jour/semaine/mois)
-- ✅ Trades par heure (détection overtrading)
-- ✅ Pertes consécutives
-- ✅ Temps entre trades
-- ✅ Confluence score moyen
-- ✅ Rejection reasons stats
-
----
-
-## ⚠️ RÈGLES STRICTES - À RESPECTER
-
-### 🚫 NE JAMAIS:
-
-1. ❌ Trader pendant **périodes interdites** (24 déc - 3 jan!)
-2. ❌ Désactiver **Kill Switch** si déclenché (attendre lendemain)
-3. ❌ Augmenter risque **> 0.3%** (Forex) / **0.2%** (Crypto)
-4. ❌ Forcer trade si **confluence < 90** (Forex) / **85** (Crypto)
-5. ❌ Trader après **2 pertes** consécutives (revenge trading)
-6. ❌ Modifier code **sans backup**
-7. ❌ Laisser tourner **sans surveillance** (2 premières semaines)
-
-### ✅ TOUJOURS:
-
-1. ✅ Surveiller les **3 fenêtres CMD** (Guardians + Telegram)
-2. ✅ Répondre aux **alertes Telegram**
-3. ✅ Sauvegarder les **databases** chaque jour
-4. ✅ Tester sur **compte démo** avant prop firm
-5. ✅ Respecter les **règles prop firm** (max losses)
-6. ✅ Analyser **CHAQUE trade** fermé (win/loss pourquoi?)
-7. ✅ Tenir un **journal de trading**
-
----
-
-## 💻 ENVIRONNEMENT TECHNIQUE
-
-### Prérequis
-
-- **OS**: Windows 10/11
-- **Python**: 3.12+ (vous avez 3.12.8 ✅)
-- **MT5**: Version 5.0+
-- **RAM**: 8 GB minimum
-- **Internet**: Connexion stable
-
-### Dépendances Python
+### Structure
 
 ```
-Flask==3.0.0
-python-telegram-bot==20.7
-requests==2.31.0
-python-dateutil==2.8.2
-colorlog==6.8.0
-python-dotenv==1.0.0
+6 Bots Spécialisés MT5
+    ↓
+Guardian FOREX (port 5000)
+Guardian CRYPTO (port 5001)
+    ↓
+Telegram Bot Pro (Interface)
+    ↓
+YOU (Contrôle total depuis mobile)
 ```
 
-Installation:
-```bash
-pip install -r requirements.txt
-```
+### Stratégie Complète
+
+✅ **EMA Crossover** (Golden/Death Cross 20×200)
+✅ **Smart Money Concepts** (Order Blocks, FVG, BOS, CHoCH)
+✅ **Confluence Scoring** /100
+✅ **Certainty Percentage** pour chaque trade
+✅ **Dynamic ATR SL/TP** (NO fixed %)
+✅ **Triple TP** (50%/30%/20% partial closes)
+✅ **Break Even** automatique (50% to TP1)
+✅ **Trailing Stop** ATR-based (après TP1)
+✅ **Economic Calendar** Forex Factory scraping
+
+### Paramètres par Devise
+
+| Devise | ATR Mult | SL Range | Risque | Confluence Min | Guardian |
+|--------|----------|----------|--------|----------------|----------|
+| **EUR** | ×1.5 | 50-80 pips | 0.3% | 90% | :5000 |
+| **GBP** | ×1.8 | 80-120 pips | 0.3% | 90% | :5000 |
+| **JPY** | ×1.3 | 40-60 pips | 0.3% | 90% | :5000 |
+| **GOLD** | ×2.5 | 200-800 pips | **0.25%** | 90% | :5000 |
+| **BTC** | ×2.0 | 500-1500 pips | 0.3% | **85%** | :5001 |
+| **ETH** | ×2.0 | 80-200 pips | 0.3% | **85%** | :5001 |
+
+**Chaque bot adapté à la volatilité de sa paire!**
 
 ---
 
-## 📁 FICHIERS DU PROJET
+## 📁 STRUCTURE FICHIERS
 
 ```
 LaBete/
 │
-├── FOREX/
-│   ├── guardian_forex.py               ← Guardian Forex (API Flask :5000)
-│   ├── La_Bete_FOREX_V6_Ultimate.mq5   ← Bot MT5 Forex
-│   ├── La_Bete_FOREX_V6_Template.mq5   ← Template commenté
-│   ├── forex_trades.db                 ← Database Forex
-│   └── logs/
-│       └── guardian_forex.log
+├── FOREX/                   # Système Forex
+│   ├── La_Bete_EUR.mq5     # Bot EUR/USD (1073 lignes)
+│   ├── La_Bete_GBP.mq5     # Bot GBP/USD
+│   ├── La_Bete_JPY.mq5     # Bot USD/JPY
+│   ├── La_Bete_GOLD.mq5    # Bot XAU/USD
+│   └── guardian_forex.py   # Guardian API (port 5000)
 │
-├── CRYPTO/
-│   ├── guardian_crypto.py              ← Guardian Crypto (API Flask :5001)
-│   ├── La_Bete_CRYPTO_V6_Ultimate.mq5  ← Bot MT5 Crypto
-│   ├── crypto_trades.db                ← Database Crypto
-│   └── logs/
-│       └── guardian_crypto.log
+├── CRYPTO/                  # Système Crypto
+│   ├── La_Bete_BTC.mq5     # Bot BTC/USD
+│   ├── La_Bete_ETH.mq5     # Bot ETH/USD
+│   └── guardian_crypto.py  # Guardian API (port 5001)
 │
-├── SHARED/
-│   ├── config.py                       ← Configuration centrale ⚙️
-│   ├── telegram_bot.py                 ← Bot Telegram dual
-│   ├── utils.py                        ← Utilitaires
-│   └── models/                         ← ML models (optionnel)
+├── CORE/                    # Core System
+│   └── telegram_bot_pro.py # Bot Telegram organisé par devise
 │
-├── requirements.txt                    ← Dépendances Python
-├── INSTALLATION.md                     ← Guide installation complet
-├── README.md                           ← Ce fichier
-└── START_LA_BETE.bat                  ← Script de lancement Windows
+├── SHARED/                  # Modules partagés
+│   ├── config.py           # Configuration globale
+│   ├── economic_calendar.py # Forex Factory scraping
+│   └── telegram_bot.py     # Ancien bot (backup)
+│
+├── LOGS/                    # Logs automatiques
+│   ├── FOREX/
+│   └── CRYPTO/
+│
+├── START_SYSTEM.bat        # Démarrage automatique Windows
+├── GUIDE_PROP_FIRM.md      # Guide complet (détails)
+└── README.md               # Ce fichier
 ```
 
 ---
 
-## 🆘 SUPPORT & TROUBLESHOOTING
+## 🔧 INSTALLATION
 
-### Problèmes Fréquents
+### 1. Prérequis
 
-**"Module not found"**
 ```bash
-pip install -r requirements.txt
+# Python 3.12+
+python --version
+
+# Installer dépendances
+pip install python-telegram-bot requests beautifulsoup4 lxml pytz flask
 ```
 
-**"Port already in use"**
+### 2. Configuration MT5
+
+**Dans MT5 > Outils > Options > Expert Advisors:**
+
+Ajouter aux URLs autorisées:
+```
+http://localhost:5000
+http://localhost:5001
+https://www.forexfactory.com
+```
+
+✅ Cocher "Autoriser WebRequest pour les URLs listées"
+
+### 3. Configuration Telegram
+
+**Éditer:** `SHARED/config.py`
+
+```python
+TELEGRAM_BOT_TOKEN = "VOTRE_TOKEN_ICI"
+TELEGRAM_CHAT_ID = "VOTRE_CHAT_ID_ICI"
+```
+
+**Obtenir token:**
+1. Parler à [@BotFather](https://t.me/BotFather) sur Telegram
+2. Créer nouveau bot avec `/newbot`
+3. Copier le token
+
+**Obtenir chat_id:**
+1. Parler à [@userinfobot](https://t.me/userinfobot)
+2. Copier votre ID
+
+### 4. Compiler les Bots
+
+**Dans MetaEditor MT5:**
+1. Ouvrir chaque fichier `.mq5`
+2. Compiler (F7)
+3. Vérifier 0 erreur, 0 warning
+
+---
+
+## 🚀 DÉMARRAGE
+
+### Option 1: Automatique (RECOMMANDÉ)
+
+**Double-cliquer:** `START_SYSTEM.bat`
+
+Choisir **[4] TOUT**
+
+✅ Démarre:
+- Guardian FOREX (port 5000)
+- Guardian CRYPTO (port 5001)
+- Telegram Bot Pro
+
+### Option 2: Manuel
+
+**Terminal 1:**
 ```bash
+cd LaBete/FOREX
+python guardian_forex.py
+```
+
+**Terminal 2:**
+```bash
+cd LaBete/CRYPTO
+python guardian_crypto.py
+```
+
+**Terminal 3:**
+```bash
+cd LaBete/CORE
+python telegram_bot_pro.py
+```
+
+### 3. Charger sur MT5
+
+**Pour chaque paire, glisser le bot sur graphique M30:**
+
+- EURUSD M30 → `La_Bete_EUR.mq5`
+- GBPUSD M30 → `La_Bete_GBP.mq5`
+- USDJPY M30 → `La_Bete_JPY.mq5`
+- XAUUSD M30 → `La_Bete_GOLD.mq5`
+- BTCUSD M30 → `La_Bete_BTC.mq5`
+- ETHUSD M30 → `La_Bete_ETH.mq5`
+
+✅ Vérifier dans l'onglet Expert que tout est actif!
+
+---
+
+## 📊 UTILISATION TELEGRAM
+
+### Vue Globale
+
+**Bouton:** `📊 Vue Globale`
+
+```
+📊 VUE GLOBALE - LA BÊTE
+
+🐺 FOREX:
+  Trades: 45
+  Win Rate: 68.9%
+  P&L: +2,450.50€
+  Positions: 2
+
+💰 CRYPTO:
+  Trades: 18
+  Win Rate: 72.2%
+  P&L: +1,850.00$
+  Positions: 1
+
+💎 TOTAL P&L: +4,300.50€
+```
+
+### Contrôle Total
+
+**Bouton:** `⚙️ Contrôle Total`
+
+```
+⚙️ CONTRÔLE GLOBAL
+
+⚠️ Actions groupées:
+
+[✅ Start All FOREX]
+[❌ Stop All FOREX]
+
+[✅ Start All CRYPTO]
+[❌ Stop All CRYPTO]
+
+[🔒 Fermer Toutes Positions]
+```
+
+**⚠️ Utilisez avec précaution!**
+
+### Exemple: Gérer EUR/USD
+
+1. Taper `/eur` ou cliquer `🇪🇺 EUR/USD`
+2. Voir menu EUR
+3. Cliquer **📊 Stats** → Voir performance
+4. Cliquer **📈 Positions** → Voir positions en cours
+5. Cliquer **🔍 Analyse** → Confluence + Certitude actuels
+6. Cliquer **📅 News** → Vérifier calendrier économique
+7. Cliquer **✅ Start** / **❌ Stop** → Activer/Désactiver
+
+**Tout depuis votre mobile!**
+
+---
+
+## 🔔 NOTIFICATIONS AUTOMATIQUES
+
+Le bot vous notifie automatiquement:
+
+✅ **Signal détecté** (Confluence + Certitude)
+📈 **Position ouverte** (Entry, SL, TP1/2/3)
+🎯 **TP atteint** (TP1, TP2, TP3 + % fermé)
+🛡️ **Break Even activé** (SL → Entry +10 pips)
+🔄 **Trailing activé** (après TP1)
+❌ **Stop Loss touché**
+⚠️ **News HIGH IMPACT proche** (2h avant)
+🚨 **Kill Switch activé** (si limites dépassées)
+
+**Vous êtes toujours dans la boucle!**
+
+---
+
+## 🎓 PROP FIRM COMPLIANCE
+
+### FTMO 40K Challenge
+
+✅ **Risk Management:**
+- Max 0.3% par trade (0.25% GOLD)
+- Max 2% combiné tous bots
+- Stop journalier si -2%
+- Max 1 trade simultané par devise
+
+✅ **Règles FTMO:**
+- Max 1% loss daily
+- Max 10% loss total
+- Pas de trading pendant news HIGH
+- Confluence minimum respecté
+- Guardian API validation obligatoire
+
+✅ **Contrôle Telegram:**
+- Surveillance temps réel
+- Stats par devise
+- Vue globale P&L
+- Stop/Start à distance
+
+### Conseils
+
+**DO:**
+- ✅ Utiliser Vue Globale pour suivre drawdown
+- ✅ Stop manuellement si approche limite
+- ✅ Privilégier certitude >70%
+- ✅ Respecter calendrier économique
+- ✅ Surveiller notifications Telegram
+
+**DON'T:**
+- ❌ Ne jamais désactiver Guardian
+- ❌ Ne jamais trader pendant news HIGH IMPACT
+- ❌ Ne jamais forcer trades (confluence minimum)
+- ❌ Ne jamais modifier SL/TP manuellement
+
+---
+
+## 🎯 WORKFLOW JOURNALIER
+
+### Matin (Avant Session)
+
+1. **Double-clic** `START_SYSTEM.bat` → [4]
+2. Ouvrir **MT5**, charger les 6 bots
+3. Ouvrir **Telegram**, `/start`
+4. Vérifier **Vue Globale**
+5. Consulter **📅 News** pour chaque devise active
+
+### Pendant Session
+
+**Telegram uniquement!**
+
+- Surveiller notifications
+- Vérifier stats via `/eur`, `/gbp`, etc.
+- Ajuster si news importantes (Stop bot si nécessaire)
+- Utiliser **🔍 Analyse** pour voir confluence actuel
+
+### Soir (Après Session)
+
+1. Vérifier **📊 Vue Globale**
+2. Analyser **📊 Stats** par devise
+3. Fermer positions si weekend (bouton **🔒**)
+4. Vérifier logs si besoin
+
+---
+
+## 📚 DOCUMENTATION
+
+### Guides Disponibles
+
+- **README.md** (ce fichier) - Vue d'ensemble
+- **GUIDE_PROP_FIRM.md** - Guide détaillé complet
+  - Installation pas à pas
+  - Utilisation Telegram
+  - Dépannage
+  - Conseils FTMO
+  - Exemples concrets
+
+### API Endpoints
+
+**Guardian FOREX (localhost:5000):**
+- `GET /stats` - Stats globales Forex
+- `GET /bot/{currency}/stats` - Stats par devise
+- `GET /bot/{currency}/positions` - Positions par devise
+- `POST /bot/{currency}/enable` - Activer bot
+- `POST /bot/{currency}/disable` - Désactiver bot
+- `GET /analyze/{pair}` - Analyser une paire
+
+**Guardian CRYPTO (localhost:5001):**
+- Mêmes endpoints pour crypto
+
+---
+
+## ❓ DÉPANNAGE
+
+### Guardian ne démarre pas
+
+```bash
+# Vérifier ports disponibles
+netstat -an | findstr :5000
+netstat -an | findstr :5001
+
+# Si occupé, tuer processus
 taskkill /F /IM python.exe
 ```
 
-**MT5 ne se connecte pas au Guardian**
-- ✅ Vérifier Guardian lancé (`curl http://localhost:5000/health`)
-- ✅ Vérifier WebRequest autorisé dans MT5
-- ✅ Vérifier pare-feu Windows
+### MT5 refuse connexion
 
-**Bot Telegram ne répond pas**
-- ✅ Vérifier token dans `config.py`
-- ✅ Vérifier internet connecté
-- ✅ Vérifier `telegram_bot.py` lancé
+**Vérifier MT5 > Options > Expert Advisors:**
 
-### Logs
+✅ `http://localhost:5000` autorisé
+✅ `http://localhost:5001` autorisé
+✅ "Autoriser WebRequest" coché
 
-- **Guardian Forex**: `LaBete/FOREX/logs/guardian_forex.log`
-- **Guardian Crypto**: `LaBete/CRYPTO/logs/guardian_crypto.log`
-- **MT5**: Onglet **Experts** dans MT5
+### Telegram ne répond pas
 
----
+```bash
+# Tester token
+curl https://api.telegram.org/bot<TOKEN>/getMe
 
-## 📈 ROADMAP
+# Vérifier config.py
+TELEGRAM_BOT_TOKEN = "..."
+```
 
-### Version Actuelle: 6.0 Ultimate
+### Bot ne trade pas
 
-**Implémenté:**
-- ✅ Smart Money Concepts complet
-- ✅ Système de confluence 100 points
-- ✅ 7 niveaux de protection
-- ✅ Kill Switch multi-triggers
-- ✅ Bot Telegram dual control
-- ✅ Guardians Python Flask API
-- ✅ Filtres crypto spécifiques
-- ✅ Anti-revenge trading
-- ✅ Périodes interdites
-- ✅ Database SQLite tracking
-
-### Version Future: 6.1+
-
-**Prévu:**
-- [ ] Machine Learning pour filtrage signaux
-- [ ] Dashboard Web temps réel
-- [ ] Backtesting automatisé
-- [ ] Optimisation paramètres génétique
-- [ ] Support multi-broker
-- [ ] Support TradingView alerts
-- [ ] API calendrier économique avancée
-- [ ] Analyse sentiment market
-- [ ] Copy trading entre comptes
-- [ ] Mobile app (iOS/Android)
+1. ✅ Bot **ACTIF** (bouton ✅ Start vert)
+2. 🔍 Consulter **Analyse** → Voir confluence actuel
+3. 📅 Vérifier **News** → Peut bloquer si proche
+4. Confluence doit être ≥90% (Forex) ou ≥85% (Crypto)
 
 ---
 
-## 📝 LICENSE
+## 📈 STATISTIQUES SYSTÈME
 
-**Privé** - Usage personnel uniquement
+### Fichiers Code
 
-Créé par **Yann** pour usage avec prop firm challenges.
+- **6 Bots MT5** - 1,072-1,073 lignes chacun
+- **2 Guardians Python** - 776 lignes chacun
+- **Telegram Bot Pro** - 700+ lignes
+- **Economic Calendar** - 260 lignes
+- **Total:** ~9,000 lignes de code
 
-**Disclaimer:** Ce système est un outil d'aide à la décision. Aucune garantie de profit. Le trading comporte des risques de perte en capital. À utiliser avec précaution.
+### Fonctionnalités
 
----
-
-## 🙏 REMERCIEMENTS
-
-- **FTMO** pour les challenges prop firm
-- **RaiseMyFunds** pour le compte actif
-- **Communauté SMC** pour les concepts Smart Money
-- **Python-Telegram-Bot** pour l'API Telegram
-- **Flask** pour l'API REST
-- **MetaQuotes** pour MT5
-
----
-
-## 📞 CONTACT
-
-- **Email**: kykylou30@gmail.com
-- **Telegram Bot Token**: `8530848109:AAE0VkNIWpvDBuqUi0nZeXlluURnEMOHuwE`
-- **Telegram Chat ID**: `1981386789`
-
----
-
-## ✅ PRÊT À TRADER
-
-Une fois installé:
-
-1. ✅ Lancer les 3 Guardians (Forex, Crypto, Telegram)
-2. ✅ Activer les 2 bots MT5
-3. ✅ Envoyer `/start` dans Telegram
-4. ✅ Vérifier `/stats` → Tout à 0
-5. ✅ **SURVEILLER** pendant 48h minimum
-6. ✅ Analyser chaque signal/trade
-7. ✅ **Laisser le système travailler**
+✅ EMA Crossover Detection
+✅ Order Blocks Detection
+✅ Fair Value Gaps Detection
+✅ BOS/CHoCH Detection
+✅ Confluence Scoring /100
+✅ Certainty Calculation %
+✅ Dynamic ATR SL/TP
+✅ Triple TP Management
+✅ Break Even Automation
+✅ Trailing Stop
+✅ Forex Factory Scraping
+✅ Telegram Control per Currency
+✅ Guardian API Validation
+✅ Kill Switches
+✅ Prop Firm Compliance
 
 ---
 
-**🐺 BON TRADING MA COUILLE ! 💎**
+## 🏆 AVANTAGES
 
-**Que La Bête soit avec toi ! ⚡**
+### Vs Autres Systèmes
+
+✅ **Organisation par Devise**
+- Chaque bot spécialisé
+- Paramètres adaptés à volatilité
+- Contrôle indépendant
+
+✅ **Telegram Interface**
+- Menu graphique intuitif
+- Contrôle total mobile
+- Notifications temps réel
+- Pas besoin MT5 ouvert
+
+✅ **Prop Firm Ready**
+- Règles FTMO intégrées
+- Risk management strict
+- Economic calendar
+- Guardian validation
+
+✅ **Code Complet**
+- Pas de TODO
+- Pas de placeholder
+- Production ready
+- 0 erreur compilation
 
 ---
 
-*Créé le 08/01/2025*
-*La Bête V6 Ultimate - Never Cramer Again*
+## 📞 SUPPORT
+
+**Logs:**
+```
+LOGS/FOREX/    # Logs Guardian Forex
+LOGS/CRYPTO/   # Logs Guardian Crypto
+```
+
+**En cas de problème:**
+1. Consulter logs
+2. Vérifier connexions API (`netstat`)
+3. Redémarrer système (`START_SYSTEM.bat`)
+4. Lire `GUIDE_PROP_FIRM.md`
+
+---
+
+## 🔒 LICENCE
+
+**Système Privé - Usage Personnel**
+
+⚠️ **NE PAS DISTRIBUER** sans autorisation
+
+---
+
+## ✨ VERSION
+
+**LA BÊTE V8 Ultimate**
+
+- EMA Crossover Strategy
+- Smart Money Concepts
+- Economic Calendar
+- Telegram Control per Currency
+- 6 Specialized Bots
+- Prop Firm Optimized
+
+---
+
+**🐺 Créé pour réussir les challenges FTMO 40K**
+
+_Système professionnel organisé par devise avec contrôle Telegram complet_
+
+🚀 **Démarrez maintenant:** `START_SYSTEM.bat` → [4] TOUT → `/start`
