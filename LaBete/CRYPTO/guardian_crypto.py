@@ -588,6 +588,150 @@ class CryptoGuardian:
                 "open_positions": 0,
             }
 
+    # ----------------------------------------
+    # ANALYSE DE MARCHÉ
+    # ----------------------------------------
+    def analyze_pair(self, pair: str) -> Dict:
+        """
+        Analyse détaillée d'une paire crypto
+
+        Note: Pour l'instant retourne des données mockées.
+        À implémenter: récupération réelle des indicateurs depuis MT5.
+        """
+        import random
+
+        # Données mockées pour demonstration
+        score = random.randint(65, 95)
+        min_score = self.config['min_confluence_score']
+
+        return {
+            "pair": pair,
+            "timestamp": datetime.now().isoformat(),
+            "indicators": {
+                "ema_20": round(random.uniform(95000, 105000), 2) if "BTC" in pair else round(random.uniform(3200, 3600), 2),
+                "ema_50": round(random.uniform(95000, 105000), 2) if "BTC" in pair else round(random.uniform(3200, 3600), 2),
+                "ema_200": round(random.uniform(95000, 105000), 2) if "BTC" in pair else round(random.uniform(3200, 3600), 2),
+                "rsi": round(random.uniform(35, 65), 1),
+                "macd": round(random.uniform(-500, 500), 2),
+                "atr": round(random.uniform(800, 1500), 2) if "BTC" in pair else round(random.uniform(50, 120), 2),
+            },
+            "confluence_score": score,
+            "score_breakdown": {
+                "smc": min(40, int(score * 0.4)),
+                "timeframe": min(25, int(score * 0.25)),
+                "indicators": min(20, int(score * 0.20)),
+                "structure": min(10, int(score * 0.10)),
+                "pattern": min(5, int(score * 0.05)),
+            },
+            "decision": "BUY" if score >= min_score and random.random() > 0.5 else "NO_TRADE",
+            "rejection_reason": f"Score insuffisant ({score}/{min_score})" if score < min_score else None,
+            "details": {
+                "EMAs alignées": random.choice([True, False]),
+                "RSI favorable": random.choice([True, False]),
+                "Order Block détecté": random.choice([True, False]),
+                "FVG aligné": random.choice([True, False]),
+                "BOS confirmé": random.choice([True, False]),
+                "Whale activity": random.choice([True, False]),
+                "Weekend protection": self._is_weekend_period(),
+            }
+        }
+
+    def get_market_report(self) -> Dict:
+        """
+        Rapport marché complet pour toutes les paires Crypto
+
+        Note: Données mockées pour demonstration.
+        À implémenter: analyse réelle de toutes les paires.
+        """
+        pairs = self.config['pairs']
+        pairs_data = []
+        best_score = 0
+        best_pair = None
+
+        for pair in pairs:
+            analysis = self.analyze_pair(pair)
+            score = analysis['confluence_score']
+
+            pairs_data.append({
+                "pair": pair,
+                "confluence_score": score,
+                "decision": analysis['decision']
+            })
+
+            if score > best_score:
+                best_score = score
+                best_pair = pair
+
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "pairs": pairs_data,
+            "best_opportunity": {
+                "pair": best_pair,
+                "score": best_score
+            } if best_pair else None,
+            "weekend_protection": self._is_weekend_period()
+        }
+
+    def get_rejected_signals(self) -> Dict:
+        """
+        Historique des signaux rejetés avec raisons
+
+        Note: Pour l'instant retourne données mockées.
+        À implémenter: logging complet des rejections dans DB.
+        """
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Récupérer les 10 derniers signaux rejetés
+        cursor.execute("""
+            SELECT timestamp, pair, metadata
+            FROM signals
+            WHERE approved = 0
+            ORDER BY timestamp DESC
+            LIMIT 10
+        """)
+        rows = cursor.fetchall()
+
+        recent_rejections = []
+        scores = []
+
+        for row in rows:
+            timestamp, pair, metadata_json = row
+            try:
+                metadata = json.loads(metadata_json) if metadata_json else {}
+                score = metadata.get('confluence_score', 0)
+                reason = metadata.get('rejection_reason', 'Score insuffisant')
+
+                # Formater le timestamp
+                dt = datetime.fromisoformat(timestamp)
+                time_str = dt.strftime("%H:%M")
+
+                recent_rejections.append({
+                    "time": time_str,
+                    "pair": pair,
+                    "score": score,
+                    "reason": reason
+                })
+
+                scores.append(score)
+            except:
+                pass
+
+        conn.close()
+
+        # Stats
+        avg_score = sum(scores) / len(scores) if scores else 0
+        best_score = max(scores) if scores else 0
+
+        return {
+            "recent_rejections": recent_rejections,
+            "stats": {
+                "analyzed": len(recent_rejections),
+                "avg_score": round(avg_score, 1),
+                "best_score": best_score
+            }
+        }
+
 
 # ========================================
 # INSTANCE GLOBALE
@@ -684,6 +828,39 @@ def deactivate_kill_switch():
     guardian.daily_pnl = 0.0
     logger.info("✅ Kill Switch crypto désactivé")
     return jsonify({"status": "OK", "message": "Kill Switch désactivé"})
+
+
+@app.route('/analyze/<pair>', methods=['GET'])
+def analyze_pair(pair):
+    """Analyse détaillée d'une paire"""
+    try:
+        analysis = guardian.analyze_pair(pair)
+        return jsonify(analysis)
+    except Exception as e:
+        logger.error(f"❌ Erreur analyse {pair}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/market_report', methods=['GET'])
+def market_report():
+    """Rapport marché complet"""
+    try:
+        report = guardian.get_market_report()
+        return jsonify(report)
+    except Exception as e:
+        logger.error(f"❌ Erreur market_report: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/rejected_signals', methods=['GET'])
+def rejected_signals():
+    """Historique des signaux rejetés"""
+    try:
+        rejections = guardian.get_rejected_signals()
+        return jsonify(rejections)
+    except Exception as e:
+        logger.error(f"❌ Erreur rejected_signals: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ========================================

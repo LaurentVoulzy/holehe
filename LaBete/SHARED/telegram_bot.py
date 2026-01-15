@@ -90,7 +90,11 @@ class LaBeteBot:
             "/startall - Démarrage total\n"
             "/report - Rapport complet\n"
             "/risk - Niveau risque global\n"
-            "/closeall - Ferme toutes positions\n",
+            "/closeall - Ferme toutes positions\n\n"
+            "*ANALYSE:*\n"
+            "/analyze EURUSD - Analyse détaillée d'une paire\n"
+            "/market_report - Rapport marché complet\n"
+            "/why_no_trade - Pourquoi aucun trade pris\n",
             parse_mode='Markdown'
         )
 
@@ -406,6 +410,191 @@ class LaBeteBot:
             return "🟢 FAIBLE"
 
     # ----------------------------------------
+    # COMMANDES - ANALYSE
+    # ----------------------------------------
+
+    async def analyze_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Analyse détaillée d'une paire"""
+        try:
+            if not context.args:
+                await update.message.reply_text(
+                    "❌ Usage: /analyze <PAIR>\n"
+                    "Exemples: /analyze EURUSD, /analyze BTCUSD"
+                )
+                return
+
+            pair = context.args[0].upper()
+
+            # Déterminer si c'est Forex ou Crypto
+            forex_pairs = ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD"]
+            crypto_pairs = ["BTCUSD", "ETHUSD"]
+
+            if pair in forex_pairs:
+                api_url = FOREX_API
+                system = "FOREX"
+            elif pair in crypto_pairs:
+                api_url = CRYPTO_API
+                system = "CRYPTO"
+            else:
+                await update.message.reply_text(f"❌ Paire non reconnue: {pair}")
+                return
+
+            # Demander l'analyse au Guardian
+            response = requests.get(f"{api_url}/analyze/{pair}", timeout=10)
+
+            if response.status_code == 200:
+                analysis = response.json()
+                message = self._format_analysis(analysis, pair, system)
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text(f"❌ Impossible d'analyser {pair}")
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def market_report_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Rapport marché complet"""
+        try:
+            # Récupérer les analyses de toutes les paires
+            forex_response = requests.get(f"{FOREX_API}/market_report", timeout=10)
+            crypto_response = requests.get(f"{CRYPTO_API}/market_report", timeout=10)
+
+            message = "📊 *RAPPORT MARCHÉ COMPLET*\n\n"
+
+            # Forex
+            if forex_response.status_code == 200:
+                forex_data = forex_response.json()
+                message += "🐺 *FOREX:*\n"
+                for pair_data in forex_data.get('pairs', []):
+                    score = pair_data.get('confluence_score', 0)
+                    emoji = "✅" if score >= 90 else "❌"
+                    message += f"  {pair_data['pair']}: {score}/100 {emoji}\n"
+
+                best = forex_data.get('best_opportunity')
+                if best:
+                    message += f"\n🎯 Meilleure: {best['pair']} ({best['score']}/100)\n"
+
+                message += "\n"
+
+            # Crypto
+            if crypto_response.status_code == 200:
+                crypto_data = crypto_response.json()
+                message += "💰 *CRYPTO:*\n"
+                for pair_data in crypto_data.get('pairs', []):
+                    score = pair_data.get('confluence_score', 0)
+                    emoji = "✅" if score >= 85 else "❌"
+                    message += f"  {pair_data['pair']}: {score}/100 {emoji}\n"
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def why_no_trade_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Pourquoi aucun trade pris"""
+        try:
+            # Demander l'historique des signaux rejetés
+            forex_response = requests.get(f"{FOREX_API}/rejected_signals", timeout=10)
+            crypto_response = requests.get(f"{CRYPTO_API}/rejected_signals", timeout=10)
+
+            message = "🤔 *POURQUOI AUCUN TRADE?*\n\n"
+
+            # Forex
+            if forex_response.status_code == 200:
+                forex_data = forex_response.json()
+                recent = forex_data.get('recent_rejections', [])
+
+                if recent:
+                    message += "🐺 *FOREX - Dernières analyses:*\n"
+                    for rej in recent[:5]:  # Les 5 dernières
+                        time_str = rej.get('time', 'N/A')
+                        pair = rej.get('pair', 'N/A')
+                        score = rej.get('score', 0)
+                        reason = rej.get('reason', 'N/A')
+                        message += f"  {time_str} {pair}: {score}/100\n"
+                        message += f"    → {reason}\n"
+
+                    stats = forex_data.get('stats', {})
+                    message += f"\n📊 Stats 24h Forex:\n"
+                    message += f"  Signaux analysés: {stats.get('analyzed', 0)}\n"
+                    message += f"  Score moyen: {stats.get('avg_score', 0):.1f}/100\n"
+                    message += f"  Meilleur: {stats.get('best_score', 0)}/100\n\n"
+
+            # Crypto
+            if crypto_response.status_code == 200:
+                crypto_data = crypto_response.json()
+                recent = crypto_data.get('recent_rejections', [])
+
+                if recent:
+                    message += "💰 *CRYPTO - Dernières analyses:*\n"
+                    for rej in recent[:5]:
+                        time_str = rej.get('time', 'N/A')
+                        pair = rej.get('pair', 'N/A')
+                        score = rej.get('score', 0)
+                        reason = rej.get('reason', 'N/A')
+                        message += f"  {time_str} {pair}: {score}/100\n"
+                        message += f"    → {reason}\n"
+
+            if len(message.split('\n')) <= 3:
+                message += "Aucune analyse récente trouvée.\n"
+                message += "Les bots sont peut-être en attente de configurations de marché favorables."
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    def _format_analysis(self, analysis: dict, pair: str, system: str) -> str:
+        """Formate une analyse détaillée"""
+        emoji = "🐺" if system == "FOREX" else "💰"
+
+        message = f"{emoji} *ANALYSE {pair} M30*\n\n"
+
+        # Indicateurs
+        indicators = analysis.get('indicators', {})
+        message += "🔍 *Indicateurs:*\n"
+        message += f"  EMA 20: {indicators.get('ema_20', 'N/A')}\n"
+        message += f"  EMA 50: {indicators.get('ema_50', 'N/A')}\n"
+        message += f"  EMA 200: {indicators.get('ema_200', 'N/A')}\n"
+        message += f"  RSI: {indicators.get('rsi', 'N/A')}\n"
+        message += f"  MACD: {indicators.get('macd', 'N/A')}\n"
+        message += f"  ATR: {indicators.get('atr', 'N/A')}\n\n"
+
+        # Score de confluence
+        score = analysis.get('confluence_score', 0)
+        min_score = 90 if system == "FOREX" else 85
+        emoji_result = "✅" if score >= min_score else "❌"
+
+        message += f"🎯 *Score Confluence:* {score}/100 {emoji_result}\n"
+
+        breakdown = analysis.get('score_breakdown', {})
+        if breakdown:
+            message += f"  Structure SMC: {breakdown.get('smc', 0)}/40\n"
+            message += f"  Multi-TF: {breakdown.get('timeframe', 0)}/25\n"
+            message += f"  Indicateurs: {breakdown.get('indicators', 0)}/20\n"
+            message += f"  S/R: {breakdown.get('structure', 0)}/10\n"
+            message += f"  Pattern: {breakdown.get('pattern', 0)}/5\n\n"
+
+        # Décision
+        decision = analysis.get('decision', 'NO_TRADE')
+        if decision == 'BUY' or decision == 'SELL':
+            message += f"✅ *SIGNAL {decision} DÉTECTÉ*\n"
+        else:
+            message += f"❌ *POSITION NON PRISE*\n"
+            reason = analysis.get('rejection_reason', 'Score insuffisant')
+            message += f"Raison: {reason}\n\n"
+
+        # Détails
+        details = analysis.get('details', {})
+        if details:
+            message += "*Détails:*\n"
+            for key, value in details.items():
+                emoji_check = "✅" if value else "❌"
+                message += f"  {emoji_check} {key}\n"
+
+        return message
+
+    # ----------------------------------------
     # RUN
     # ----------------------------------------
 
@@ -439,6 +628,11 @@ class LaBeteBot:
         self.application.add_handler(CommandHandler("startall", self.startall_command))
         self.application.add_handler(CommandHandler("report", self.report_command))
         self.application.add_handler(CommandHandler("risk", self.risk_command))
+
+        # Commandes d'analyse
+        self.application.add_handler(CommandHandler("analyze", self.analyze_command))
+        self.application.add_handler(CommandHandler("market_report", self.market_report_command))
+        self.application.add_handler(CommandHandler("why_no_trade", self.why_no_trade_command))
 
         # Démarrer le bot
         logger.info("✅ Bot Telegram opérationnel!")
