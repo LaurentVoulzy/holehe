@@ -116,28 +116,123 @@ class EconomicCalendar:
 
     def _fetch_news_from_source(self, currency: str) -> List[Dict]:
         """
-        Récupère les news depuis Forex Factory
-
-        IMPORTANT: Ceci est une version simplifiée.
-        Pour la production, implémentez un vrai scraper ou utilisez une API.
+        Récupère les news depuis Forex Factory avec scraping BeautifulSoup
         """
         try:
-            # Option 1: Scraping Forex Factory (nécessite BeautifulSoup)
-            # url = "https://www.forexfactory.com/calendar"
-            # response = requests.get(url)
-            # ... parser le HTML ...
+            from bs4 import BeautifulSoup
+            import re
 
-            # Option 2: API tierce (TradingEconomics, Investing.com)
-            # ... utiliser API payante ...
+            # URL Forex Factory pour aujourd'hui
+            url = "https://www.forexfactory.com/calendar?day=today"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
 
-            # Pour l'instant: retourner liste vide (pas de news détectées)
-            # Le système sera prudent et ne bloquera que si news confirmées
+            response = requests.get(url, headers=headers, timeout=10)
 
-            logger.info(f"Vérification calendrier {currency}: Aucune news HIGH IMPACT détectée")
+            if response.status_code != 200:
+                logger.warning(f"Forex Factory HTTP {response.status_code}")
+                return []
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+            events = []
+
+            # Trouver les pays correspondant à la devise
+            target_countries = CURRENCY_COUNTRIES.get(currency, [currency])
+
+            # Parser les lignes du calendrier
+            calendar_rows = soup.find_all('tr', class_='calendar__row')
+
+            current_time = datetime.now(PARIS_TZ)
+
+            for row in calendar_rows:
+                try:
+                    # Récupérer le pays
+                    currency_cell = row.find('td', class_='calendar__currency')
+                    if not currency_cell:
+                        continue
+
+                    event_currency = currency_cell.text.strip()
+
+                    # Vérifier si c'est la bonne devise
+                    if event_currency not in target_countries and not any(country in event_currency for country in target_countries):
+                        continue
+
+                    # Récupérer l'impact
+                    impact_cell = row.find('td', class_='calendar__impact')
+                    impact_spans = impact_cell.find_all('span', class_='calendar__impact-icon') if impact_cell else []
+                    impact_level = len([s for s in impact_spans if 'calendar__impact-icon--active' in s.get('class', [])])
+
+                    # Seulement les HIGH IMPACT (3 barres rouges)
+                    if impact_level < 3:
+                        continue
+
+                    # Récupérer le titre
+                    title_cell = row.find('td', class_='calendar__event')
+                    if not title_cell:
+                        continue
+                    title = title_cell.text.strip()
+
+                    # Récupérer l'heure
+                    time_cell = row.find('td', class_='calendar__time')
+                    if not time_cell:
+                        continue
+                    time_str = time_cell.text.strip()
+
+                    # Parser l'heure (format: "9:30am" ou "All Day")
+                    if time_str and time_str != "All Day":
+                        try:
+                            # Convertir l'heure en datetime
+                            event_time = datetime.strptime(time_str, "%I:%M%p").time()
+                            event_datetime = datetime.combine(current_time.date(), event_time)
+                            event_datetime = PARIS_TZ.localize(event_datetime)
+
+                            # Calculer le temps restant
+                            time_until = event_datetime - current_time
+                            hours_until = time_until.total_seconds() / 3600
+
+                            # Seulement les news dans les prochaines N heures
+                            if 0 <= hours_until <= self.buffer_hours:
+                                minutes_until = int(time_until.total_seconds() / 60)
+
+                                if minutes_until < 60:
+                                    time_until_str = f"{minutes_until}min"
+                                else:
+                                    time_until_str = f"{int(hours_until)}h{minutes_until % 60}min"
+
+                                events.append({
+                                    'currency': event_currency,
+                                    'title': title,
+                                    'impact': 'HIGH',
+                                    'time': event_datetime.strftime("%H:%M"),
+                                    'time_until': time_until_str,
+                                    'hours_until': hours_until
+                                })
+
+                                logger.warning(f"⚠️ NEWS HIGH IMPACT {event_currency} dans {time_until_str}: {title}")
+
+                        except Exception as e:
+                            logger.debug(f"Erreur parsing heure '{time_str}': {e}")
+                            continue
+
+                except Exception as e:
+                    logger.debug(f"Erreur parsing row: {e}")
+                    continue
+
+            if events:
+                logger.info(f"Calendrier {currency}: {len(events)} news HIGH IMPACT trouvées")
+            else:
+                logger.info(f"Calendrier {currency}: Aucune news HIGH IMPACT dans les {self.buffer_hours}h")
+
+            return events
+
+        except ImportError:
+            logger.warning("BeautifulSoup4 non installé. Calendrier économique désactivé.")
+            logger.warning("Installez avec: pip install beautifulsoup4 lxml")
             return []
 
         except Exception as e:
-            logger.error(f"Erreur fetch news {currency}: {e}")
+            logger.error(f"Erreur scraping Forex Factory pour {currency}: {e}")
             return []
 
     def _is_high_impact(self, event: Dict) -> bool:

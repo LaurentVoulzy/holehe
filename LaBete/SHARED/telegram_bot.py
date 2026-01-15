@@ -94,7 +94,18 @@ class LaBeteBot:
             "*ANALYSE:*\n"
             "/analyze EURUSD - Analyse détaillée d'une paire\n"
             "/market_report - Rapport marché complet\n"
-            "/why_no_trade - Pourquoi aucun trade pris\n",
+            "/why_no_trade - Pourquoi aucun trade pris\n\n"
+            "*POSITIONS:*\n"
+            "/positions - Liste toutes les positions\n"
+            "/close_position <ticket> - Fermer position spécifique\n\n"
+            "*MONITORING:*\n"
+            "/bots - Statut de tous les bots\n"
+            "/enable EUR/GBP/JPY/GOLD/BTC/ETH - Activer un bot\n"
+            "/disable EUR/GBP/JPY/GOLD/BTC/ETH - Désactiver un bot\n"
+            "/news - Calendrier économique\n"
+            "/balance - Soldes des comptes\n"
+            "/winrate - Statistiques win rate\n"
+            "/performance - Performance par paire\n",
             parse_mode='Markdown'
         )
 
@@ -336,6 +347,392 @@ class LaBeteBot:
             # Crypto
             crypto_risk = self._assess_risk(crypto_stats, CRYPTO_CONFIG)
             message += f"💰 Crypto: {crypto_risk}\n"
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    # ----------------------------------------
+    # COMMANDES - POSITIONS
+    # ----------------------------------------
+
+    async def positions_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Liste toutes les positions ouvertes (Forex + Crypto)"""
+        try:
+            message = "📊 *POSITIONS OUVERTES*\n\n"
+
+            # Positions Forex
+            forex_response = requests.get(f"{FOREX_API}/positions", timeout=5)
+            if forex_response.status_code == 200:
+                forex_positions = forex_response.json().get('positions', [])
+
+                if forex_positions:
+                    message += "🐺 *FOREX:*\n"
+                    for pos in forex_positions:
+                        direction = "🟢 BUY" if pos.get('type') == 'BUY' else "🔴 SELL"
+                        pair = pos.get('pair', 'N/A')
+                        lots = pos.get('lots', 0)
+                        entry = pos.get('entry_price', 0)
+                        current = pos.get('current_price', 0)
+                        pnl = pos.get('pnl', 0)
+                        pnl_emoji = "📈" if pnl > 0 else "📉" if pnl < 0 else "➡️"
+                        ticket = pos.get('ticket', 'N/A')
+
+                        message += f"  {direction} {pair} {lots} lots\n"
+                        message += f"    Entry: {entry} → {current}\n"
+                        message += f"    P&L: {pnl_emoji} {pnl:.2f}€\n"
+                        message += f"    Ticket: #{ticket}\n\n"
+                else:
+                    message += "🐺 *FOREX:* Aucune position\n\n"
+
+            # Positions Crypto
+            crypto_response = requests.get(f"{CRYPTO_API}/positions", timeout=5)
+            if crypto_response.status_code == 200:
+                crypto_positions = crypto_response.json().get('positions', [])
+
+                if crypto_positions:
+                    message += "💰 *CRYPTO:*\n"
+                    for pos in crypto_positions:
+                        direction = "🟢 BUY" if pos.get('type') == 'BUY' else "🔴 SELL"
+                        pair = pos.get('pair', 'N/A')
+                        lots = pos.get('lots', 0)
+                        entry = pos.get('entry_price', 0)
+                        current = pos.get('current_price', 0)
+                        pnl = pos.get('pnl', 0)
+                        pnl_emoji = "📈" if pnl > 0 else "📉" if pnl < 0 else "➡️"
+                        ticket = pos.get('ticket', 'N/A')
+
+                        message += f"  {direction} {pair} {lots} lots\n"
+                        message += f"    Entry: {entry} → {current}\n"
+                        message += f"    P&L: {pnl_emoji} {pnl:.2f}$\n"
+                        message += f"    Ticket: #{ticket}\n\n"
+                else:
+                    message += "💰 *CRYPTO:* Aucune position\n\n"
+
+            if "Aucune position" in message and message.count("Aucune position") == 2:
+                message += "✅ Aucune position ouverte actuellement\n"
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def close_position_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Ferme une position spécifique par ticket"""
+        try:
+            if not context.args:
+                await update.message.reply_text(
+                    "❌ Usage: /close_position <TICKET>\n"
+                    "Exemple: /close_position 123456789"
+                )
+                return
+
+            ticket = context.args[0]
+
+            # Essayer Forex d'abord
+            forex_response = requests.post(
+                f"{FOREX_API}/close_position/{ticket}",
+                timeout=5
+            )
+
+            if forex_response.status_code == 200:
+                await update.message.reply_text(f"✅ Position #{ticket} fermée (FOREX)")
+                return
+
+            # Sinon essayer Crypto
+            crypto_response = requests.post(
+                f"{CRYPTO_API}/close_position/{ticket}",
+                timeout=5
+            )
+
+            if crypto_response.status_code == 200:
+                await update.message.reply_text(f"✅ Position #{ticket} fermée (CRYPTO)")
+                return
+
+            await update.message.reply_text(f"❌ Position #{ticket} non trouvée")
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def closeall_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Ferme toutes les positions"""
+        try:
+            # Fermer toutes positions Forex
+            forex_response = requests.post(f"{FOREX_API}/close_all_positions", timeout=5)
+            forex_closed = 0
+            if forex_response.status_code == 200:
+                forex_closed = forex_response.json().get('closed', 0)
+
+            # Fermer toutes positions Crypto
+            crypto_response = requests.post(f"{CRYPTO_API}/close_all_positions", timeout=5)
+            crypto_closed = 0
+            if crypto_response.status_code == 200:
+                crypto_closed = crypto_response.json().get('closed', 0)
+
+            message = "🔒 *FERMETURE TOTALE*\n\n"
+            message += f"🐺 Forex: {forex_closed} position(s) fermée(s)\n"
+            message += f"💰 Crypto: {crypto_closed} position(s) fermée(s)\n\n"
+            message += f"✅ Total: {forex_closed + crypto_closed} position(s)"
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    # ----------------------------------------
+    # COMMANDES - MONITORING
+    # ----------------------------------------
+
+    async def bots_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Affiche le statut de tous les bots (EUR, GBP, JPY, GOLD, BTC, ETH)"""
+        try:
+            message = "🤖 *STATUT DES BOTS*\n\n"
+
+            # Forex bots
+            forex_response = requests.get(f"{FOREX_API}/bots_status", timeout=5)
+            if forex_response.status_code == 200:
+                bots = forex_response.json().get('bots', {})
+
+                message += "🐺 *FOREX:*\n"
+                for bot_name, status in bots.items():
+                    enabled = status.get('enabled', False)
+                    emoji = "✅" if enabled else "❌"
+                    last_signal = status.get('last_signal_time', 'Jamais')
+                    confluence = status.get('last_confluence', 0)
+
+                    message += f"  {emoji} {bot_name}: "
+                    message += f"{'ACTIF' if enabled else 'INACTIF'}\n"
+                    message += f"    Dernier signal: {last_signal}\n"
+                    message += f"    Confluence: {confluence}/100\n\n"
+
+            # Crypto bots
+            crypto_response = requests.get(f"{CRYPTO_API}/bots_status", timeout=5)
+            if crypto_response.status_code == 200:
+                bots = crypto_response.json().get('bots', {})
+
+                message += "💰 *CRYPTO:*\n"
+                for bot_name, status in bots.items():
+                    enabled = status.get('enabled', False)
+                    emoji = "✅" if enabled else "❌"
+                    last_signal = status.get('last_signal_time', 'Jamais')
+                    confluence = status.get('last_confluence', 0)
+
+                    message += f"  {emoji} {bot_name}: "
+                    message += f"{'ACTIF' if enabled else 'INACTIF'}\n"
+                    message += f"    Dernier signal: {last_signal}\n"
+                    message += f"    Confluence: {confluence}/100\n\n"
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def enable_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Active un bot spécifique"""
+        try:
+            if not context.args:
+                await update.message.reply_text(
+                    "❌ Usage: /enable <BOT>\n"
+                    "Bots disponibles: EUR, GBP, JPY, GOLD, BTC, ETH"
+                )
+                return
+
+            bot_name = context.args[0].upper()
+            valid_forex = ["EUR", "GBP", "JPY", "GOLD"]
+            valid_crypto = ["BTC", "ETH"]
+
+            if bot_name in valid_forex:
+                api_url = FOREX_API
+                system = "FOREX"
+            elif bot_name in valid_crypto:
+                api_url = CRYPTO_API
+                system = "CRYPTO"
+            else:
+                await update.message.reply_text(f"❌ Bot non reconnu: {bot_name}")
+                return
+
+            response = requests.post(f"{api_url}/bot/{bot_name}/enable", timeout=5)
+
+            if response.status_code == 200:
+                await update.message.reply_text(f"✅ Bot {bot_name} ({system}) activé")
+            else:
+                await update.message.reply_text(f"❌ Erreur activation {bot_name}")
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def disable_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Désactive un bot spécifique"""
+        try:
+            if not context.args:
+                await update.message.reply_text(
+                    "❌ Usage: /disable <BOT>\n"
+                    "Bots disponibles: EUR, GBP, JPY, GOLD, BTC, ETH"
+                )
+                return
+
+            bot_name = context.args[0].upper()
+            valid_forex = ["EUR", "GBP", "JPY", "GOLD"]
+            valid_crypto = ["BTC", "ETH"]
+
+            if bot_name in valid_forex:
+                api_url = FOREX_API
+                system = "FOREX"
+            elif bot_name in valid_crypto:
+                api_url = CRYPTO_API
+                system = "CRYPTO"
+            else:
+                await update.message.reply_text(f"❌ Bot non reconnu: {bot_name}")
+                return
+
+            response = requests.post(f"{api_url}/bot/{bot_name}/disable", timeout=5)
+
+            if response.status_code == 200:
+                await update.message.reply_text(f"❌ Bot {bot_name} ({system}) désactivé")
+            else:
+                await update.message.reply_text(f"❌ Erreur désactivation {bot_name}")
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def news_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Affiche le calendrier économique"""
+        try:
+            # Importer le module economic_calendar
+            from economic_calendar import get_todays_news_summary
+
+            message = get_todays_news_summary()
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur calendrier: {str(e)}")
+
+    async def balance_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Affiche les soldes des comptes"""
+        try:
+            message = "💰 *SOLDES DES COMPTES*\n\n"
+
+            # Balance Forex
+            forex_response = requests.get(f"{FOREX_API}/stats", timeout=5)
+            if forex_response.status_code == 200:
+                forex_stats = forex_response.json()
+                balance = forex_stats.get('balance', 0)
+                equity = forex_stats.get('equity', 0)
+                margin = forex_stats.get('margin_free', 0)
+
+                message += "🐺 *FOREX (FTMO 40K):*\n"
+                message += f"  Balance: {balance:.2f}€\n"
+                message += f"  Equity: {equity:.2f}€\n"
+                message += f"  Marge libre: {margin:.2f}€\n"
+                message += f"  P&L: {(equity - 40000):.2f}€\n\n"
+
+            # Balance Crypto
+            crypto_response = requests.get(f"{CRYPTO_API}/stats", timeout=5)
+            if crypto_response.status_code == 200:
+                crypto_stats = crypto_response.json()
+                balance = crypto_stats.get('balance', 0)
+                equity = crypto_stats.get('equity', 0)
+
+                message += "💰 *CRYPTO:*\n"
+                message += f"  Balance: {balance:.2f}$\n"
+                message += f"  Equity: {equity:.2f}$\n"
+                message += f"  P&L: {(equity - balance):.2f}$\n\n"
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def winrate_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Affiche les statistiques détaillées de win rate"""
+        try:
+            message = "📊 *WIN RATE DÉTAILLÉ*\n\n"
+
+            # Win rate Forex
+            forex_response = requests.get(f"{FOREX_API}/winrate", timeout=5)
+            if forex_response.status_code == 200:
+                forex_data = forex_response.json()
+
+                message += "🐺 *FOREX:*\n"
+                message += f"  Global: {forex_data.get('overall', 0):.1f}%\n"
+                message += f"  Cette semaine: {forex_data.get('this_week', 0):.1f}%\n"
+                message += f"  Ce mois: {forex_data.get('this_month', 0):.1f}%\n\n"
+
+                # Par paire
+                by_pair = forex_data.get('by_pair', {})
+                if by_pair:
+                    message += "  *Par paire:*\n"
+                    for pair, wr in by_pair.items():
+                        message += f"    {pair}: {wr:.1f}%\n"
+                    message += "\n"
+
+            # Win rate Crypto
+            crypto_response = requests.get(f"{CRYPTO_API}/winrate", timeout=5)
+            if crypto_response.status_code == 200:
+                crypto_data = crypto_response.json()
+
+                message += "💰 *CRYPTO:*\n"
+                message += f"  Global: {crypto_data.get('overall', 0):.1f}%\n"
+                message += f"  Cette semaine: {crypto_data.get('this_week', 0):.1f}%\n"
+                message += f"  Ce mois: {crypto_data.get('this_month', 0):.1f}%\n\n"
+
+                # Par paire
+                by_pair = crypto_data.get('by_pair', {})
+                if by_pair:
+                    message += "  *Par paire:*\n"
+                    for pair, wr in by_pair.items():
+                        message += f"    {pair}: {wr:.1f}%\n"
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except Exception as e:
+            await update.message.reply_text(f"❌ Erreur: {str(e)}")
+
+    async def performance_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Affiche les performances détaillées par paire"""
+        try:
+            message = "📈 *PERFORMANCE PAR PAIRE*\n\n"
+
+            # Performance Forex
+            forex_response = requests.get(f"{FOREX_API}/performance", timeout=5)
+            if forex_response.status_code == 200:
+                forex_data = forex_response.json()
+
+                message += "🐺 *FOREX:*\n"
+                for pair_data in forex_data.get('pairs', []):
+                    pair = pair_data.get('pair')
+                    trades = pair_data.get('trades', 0)
+                    winrate = pair_data.get('winrate', 0)
+                    pnl = pair_data.get('pnl', 0)
+                    avg_rr = pair_data.get('avg_rr', 0)
+
+                    pnl_emoji = "📈" if pnl > 0 else "📉" if pnl < 0 else "➡️"
+
+                    message += f"  *{pair}:*\n"
+                    message += f"    Trades: {trades} | WR: {winrate:.1f}%\n"
+                    message += f"    P&L: {pnl_emoji} {pnl:.2f}€\n"
+                    message += f"    R:R moyen: 1:{avg_rr:.2f}\n\n"
+
+            # Performance Crypto
+            crypto_response = requests.get(f"{CRYPTO_API}/performance", timeout=5)
+            if crypto_response.status_code == 200:
+                crypto_data = crypto_response.json()
+
+                message += "💰 *CRYPTO:*\n"
+                for pair_data in crypto_data.get('pairs', []):
+                    pair = pair_data.get('pair')
+                    trades = pair_data.get('trades', 0)
+                    winrate = pair_data.get('winrate', 0)
+                    pnl = pair_data.get('pnl', 0)
+                    avg_rr = pair_data.get('avg_rr', 0)
+
+                    pnl_emoji = "📈" if pnl > 0 else "📉" if pnl < 0 else "➡️"
+
+                    message += f"  *{pair}:*\n"
+                    message += f"    Trades: {trades} | WR: {winrate:.1f}%\n"
+                    message += f"    P&L: {pnl_emoji} {pnl:.2f}$\n"
+                    message += f"    R:R moyen: 1:{avg_rr:.2f}\n\n"
 
             await update.message.reply_text(message, parse_mode='Markdown')
 
@@ -633,6 +1030,20 @@ class LaBeteBot:
         self.application.add_handler(CommandHandler("analyze", self.analyze_command))
         self.application.add_handler(CommandHandler("market_report", self.market_report_command))
         self.application.add_handler(CommandHandler("why_no_trade", self.why_no_trade_command))
+
+        # Commandes positions
+        self.application.add_handler(CommandHandler("positions", self.positions_command))
+        self.application.add_handler(CommandHandler("close_position", self.close_position_command))
+        self.application.add_handler(CommandHandler("closeall", self.closeall_command))
+
+        # Commandes monitoring
+        self.application.add_handler(CommandHandler("bots", self.bots_command))
+        self.application.add_handler(CommandHandler("enable", self.enable_command))
+        self.application.add_handler(CommandHandler("disable", self.disable_command))
+        self.application.add_handler(CommandHandler("news", self.news_command))
+        self.application.add_handler(CommandHandler("balance", self.balance_command))
+        self.application.add_handler(CommandHandler("winrate", self.winrate_command))
+        self.application.add_handler(CommandHandler("performance", self.performance_command))
 
         # Démarrer le bot
         logger.info("✅ Bot Telegram opérationnel!")
