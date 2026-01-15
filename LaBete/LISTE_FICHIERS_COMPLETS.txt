@@ -1,0 +1,44 @@
+=================================================================
+VÉRIFICATION FICHIERS - LA BÊTE PROP FIRM SYSTEM
+Date: 15/01/2025
+Prêt pour: 16/01/2025 12:00
+=================================================================
+
+📁 BOTS MT5 (À COMPILER DEMAIN)
+=================================================================
+FOREX/La_Bete_EUR.mq5      | $(ls -lh FOREX/La_Bete_EUR.mq5 2>/dev/null | awk '{print $5}')
+FOREX/La_Bete_GBP.mq5      | $(ls -lh FOREX/La_Bete_GBP.mq5 2>/dev/null | awk '{print $5}')
+FOREX/La_Bete_JPY.mq5      | $(ls -lh FOREX/La_Bete_JPY.mq5 2>/dev/null | awk '{print $5}')
+FOREX/La_Bete_GOLD.mq5     | $(ls -lh FOREX/La_Bete_GOLD.mq5 2>/dev/null | awk '{print $5}')
+CRYPTO/La_Bete_BTC.mq5     | $(ls -lh CRYPTO/La_Bete_BTC.mq5 2>/dev/null | awk '{print $5}')
+CRYPTO/La_Bete_ETH.mq5     | $(ls -lh CRYPTO/La_Bete_ETH.mq5 2>/dev/null | awk '{print $5}')
+
+🐍 GUARDIANS PYTHON (DÉMARRAGE AUTO)
+=================================================================
+FOREX/guardian_forex.py    | $(ls -lh FOREX/guardian_forex.py 2>/dev/null | awk '{print $5}')
+CRYPTO/guardian_crypto.py  | $(ls -lh CRYPTO/guardian_crypto.py 2>/dev/null | awk '{print $5}')
+
+📱 TELEGRAM BOT (INTERFACE)
+=================================================================
+CORE/telegram_bot_pro.py   | $(ls -lh CORE/telegram_bot_pro.py 2>/dev/null | awk '{print $5}')
+
+📋 MODULES PARTAGÉS
+=================================================================
+SHARED/config.py           | $(ls -lh SHARED/config.py 2>/dev/null | awk '{print $5}')
+SHARED/economic_calendar.py| $(ls -lh SHARED/economic_calendar.py 2>/dev/null | awk '{print $5}')
+
+🚀 DÉMARRAGE
+=================================================================
+START_SYSTEM.bat           | $(ls -lh START_SYSTEM.bat 2>/dev/null | awk '{print $5}')
+
+📖 DOCUMENTATION
+=================================================================
+README.md                  | $(ls -lh README.md 2>/dev/null | awk '{print $5}')
+GUIDE_PROP_FIRM.md         | $(ls -lh GUIDE_PROP_FIRM.md 2>/dev/null | awk '{print $5}')
+CHECKLIST_DEMAIN_MIDI.md   | $(ls -lh CHECKLIST_DEMAIN_MIDI.md 2>/dev/null | awk '{print $5}')
+VERIFICATION_SYSTEME.md    | $(ls -lh VERIFICATION_SYSTEME.md 2>/dev/null | awk '{print $5}')
+
+=================================================================
+TOTAL FICHIERS ESSENTIELS: $(find . -name "La_Bete_*.mq5" -o -name "guardian_*.py" -o -name "telegram_bot_pro.py" -o -name "config.py" -o -name "economic_calendar.py" -o -name "START_SYSTEM.bat" | wc -l)
+=================================================================
+
