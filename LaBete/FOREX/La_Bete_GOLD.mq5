@@ -1,18 +1,20 @@
 //+------------------------------------------------------------------+
-//|                                           La_Bete_GOLD.mq5         |
+//|                                           La_Bete_GOLD_V9.mq5       |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| BOT SPÉCIALISÉ XAU/USD (GOLD) - PROP FIRM COMPLIANT                       |
+//| BOT SPÉCIALISÉ XAU/USD V9 - PROP FIRM ULTIMATE                     |
 //| - EMA Crossover Strategy (Golden/Death Cross)                      |
 //| - Smart Money Concepts (OB, FVG, BOS, CHoCH)                       |
 //| - Confluence Scoring /100 + Certainty %                            |
 //| - Dynamic ATR-based SL/TP (NO FIXED %)                            |
 //| - Triple TP (50% / 30% / 20%) + BE + Trailing                     |
-//| - Economic Calendar Integration                                    |
+//| - Economic Calendar EUR FILTRÉE (news EUR uniquement)              |
+//| - Détection volatilité anormale (pause auto si > 200%)            |
+//| - Protection news renforcée PAR DEVISE                             |
 //+------------------------------------------------------------------+
 
 #property copyright "Yann - La Bête"
-#property version   "8.00"
+#property version   "9.00"
 #property strict
 
 //+------------------------------------------------------------------+
@@ -25,9 +27,9 @@
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
 //+------------------------------------------------------------------+
-input group "=== CONFIGURATION XAU/USD (GOLD) ==="
+input group "=== CONFIGURATION XAU/USD ==="
 input double   RiskPercent = 0.25;           // Risque par trade (%)
-input int      MagicNumber = 666004;        // Magic Number EUR
+input int      MagicNumber = 666004;        // Magic Number GOLD
 input string   TradeComment = "LaBete_GOLD"; // Commentaire
 
 input group "=== CONFLUENCE & SMC ==="
@@ -68,6 +70,18 @@ input string   GuardianURL = "http://localhost:5000/validate_signal";
 input bool     RequireApproval = true;      // Requiert approbation Guardian
 input int      API_Timeout = 5000;          // Timeout API (ms)
 
+input group "=== NEWS ÉCONOMIQUES V9 (EUR UNIQUEMENT) ==="
+input bool     CheckEconomicNews = true;    // Vérifier news économiques EUR
+input int      NewsBufferMinutes = 120;     // Buffer avant/après news (min)
+input bool     OnlyHighImpact = true;       // Uniquement HIGH IMPACT (EUR)
+input string   NewsCurrency = "USD";        // Devise à filtrer (EUR pour ce bot)
+
+input group "=== VOLATILITÉ ANORMALE V9 ==="
+input bool     CheckVolatility = true;      // Détecter volatilité anormale
+input double   MaxVolatilityRatio = 2.0;    // Pause si ATR > 200% moyenne
+input int      VolatilityPeriod = 20;       // Période moyenne volatilité
+input int      PauseMinutesIfAnomaly = 60;  // Pause (min) si volatilité anormale
+
 //+------------------------------------------------------------------+
 //| VARIABLES GLOBALES                                                |
 //+------------------------------------------------------------------+
@@ -94,6 +108,17 @@ bool TP2_Hit = false;
 bool TP3_Hit = false;
 bool BE_Activated = false;
 bool Trailing_Active = false;
+
+// V9: Gestion news économiques
+datetime lastNewsCheck = 0;
+datetime nextNewsTime = 0;
+bool newsBlockActive = false;
+string lastNewsTitle = "";
+
+// V9: Gestion volatilité anormale
+datetime volatilityPauseUntil = 0;
+double avgATR = 0.0;
+bool volatilityAnomalyDetected = false;
 
 // Structures
 struct OrderBlock {
@@ -147,15 +172,15 @@ MarketStructure marketStruct;
 int OnInit()
 {
     Print("╔══════════════════════════════════════════════════════════╗");
-    Print("║          🐺 LA BÊTE EUR V8 ULTIMATE 🐺                   ║");
-    Print("║     Système Spécialisé XAU/USD (GOLD) - Prop Firm Ready         ║");
+    Print("║          🐺 LA BÊTE GOLD V9 ULTIMATE 🐺                   ║");
+    Print("║     Système Spécialisé XAU/USD - Prop Firm Ready         ║");
     Print("║   EMA Crossover + SMC + ATR Dynamic SL/TP                ║");
     Print("╚══════════════════════════════════════════════════════════╝");
 
-    // Vérifier qu'on est sur XAU/USD (GOLD)
-    if(_Symbol != "XAUUSD")
+    // Vérifier qu'on est sur XAU/USD
+    if(_Symbol != "EURUSD")
     {
-        Print("⚠️ ATTENTION: Ce bot est optimisé pour XAU/USD (GOLD) uniquement!");
+        Print("⚠️ ATTENTION: Ce bot est optimisé pour XAU/USD uniquement!");
         Print("   Symbole actuel: ", _Symbol);
     }
 
@@ -209,6 +234,15 @@ int OnInit()
     Print("🎲 Certitude min: ", MinCertaintyPercent, "%");
     Print("📏 SL: ATR × ", ATR_Multiplier_SL, " (", SL_MinPips, "-", SL_MaxPips, " pips)");
     Print("🎯 TP: 1:", TP1_RR, " / 1:", TP2_RR, " / 1:", TP3_RR);
+    Print("════════════════════════════════════════════════════════");
+    Print("🆕 NOUVEAUTÉS V9:");
+    Print("📅 News EUR filtrées: ", (CheckEconomicNews ? "✅ ACTIVÉ" : "❌ OFF"));
+    if(CheckEconomicNews)
+        Print("   └─ Buffer: ±", NewsBufferMinutes, " min | Devise: ", NewsCurrency);
+    Print("📊 Détection volatilité: ", (CheckVolatility ? "✅ ACTIVÉ" : "❌ OFF"));
+    if(CheckVolatility)
+        Print("   └─ Pause si ATR > ", MaxVolatilityRatio*100, "% moyenne (", PauseMinutesIfAnomaly, " min)");
+    Print("╚══════════════════════════════════════════════════════════╝");
 
     return(INIT_SUCCEEDED);
 }
@@ -218,7 +252,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
-    Print("🛑 La Bête EUR arrêtée. Raison: ", reason);
+    Print("🛑 La Bête EUR V9 arrêtée. Raison: ", reason);
 
     IndicatorRelease(handleEMA_Fast);
     IndicatorRelease(handleEMA_Medium);
@@ -228,7 +262,111 @@ void OnDeinit(const int reason)
 }
 
 //+------------------------------------------------------------------+
-//| Expert tick function                                               |
+//| V9: Vérifie les news économiques EUR                              |
+//+------------------------------------------------------------------+
+bool IsEconomicNewsSafe()
+{
+    if(!CheckEconomicNews)
+        return true;  // Désactivé, on peut trader
+
+    // Vérifier toutes les 5 minutes seulement
+    if(TimeCurrent() - lastNewsCheck < 300)
+    {
+        // Si on est en période de blocage
+        if(newsBlockActive && TimeCurrent() < nextNewsTime)
+        {
+            return false;
+        }
+        else if(newsBlockActive && TimeCurrent() >= nextNewsTime)
+        {
+            newsBlockActive = false;
+            Print("📅 Fin période protection news EUR");
+        }
+        return !newsBlockActive;
+    }
+
+    lastNewsCheck = TimeCurrent();
+
+    // Appel API Guardian pour récupérer news EUR
+    string url = StringFormat("%s/calendar/%s", StringSubstr(GuardianURL, 0, StringFind(GuardianURL, "/validate")), NewsCurrency);
+
+    char post[], result[];
+    string headers = "Content-Type: application/json\r\n";
+    int timeout = 5000;
+
+    int res = WebRequest("GET", url, headers, timeout, post, result, headers);
+
+    if(res == 200)
+    {
+        string response = CharArrayToString(result);
+
+        // Parser la réponse JSON (simplifié)
+        if(StringFind(response, "upcoming_news") > 0)
+        {
+            // Vérifier s'il y a des news dans les prochaines heures
+            if(StringFind(response, "\"impact\":\"HIGH\"") > 0)
+            {
+                Print("⚠️ NEWS EUR HIGH IMPACT détectée! Pause trading ", NewsBufferMinutes, " min");
+                newsBlockActive = true;
+                nextNewsTime = TimeCurrent() + (NewsBufferMinutes * 60);
+                lastNewsTitle = "HIGH IMPACT EUR";
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+//+------------------------------------------------------------------+
+//| V9: Vérifie volatilité anormale                                   |
+//+------------------------------------------------------------------+
+bool IsVolatilityNormal()
+{
+    if(!CheckVolatility)
+        return true;  // Désactivé
+
+    // Si en pause forcée
+    if(TimeCurrent() < volatilityPauseUntil)
+    {
+        return false;
+    }
+
+    // Calculer ATR moyenne sur période
+    double sumATR = 0.0;
+    for(int i = 0; i < VolatilityPeriod; i++)
+    {
+        double atr[];
+        ArraySetAsSeries(atr, true);
+        if(CopyBuffer(handleATR, 0, i, 1, atr) > 0)
+        {
+            sumATR += atr[0];
+        }
+    }
+    avgATR = sumATR / VolatilityPeriod;
+
+    // ATR actuel
+    double currentATR = lastATR[0];
+
+    // Ratio volatilité
+    double volatilityRatio = (currentATR / avgATR);
+
+    if(volatilityRatio > MaxVolatilityRatio)
+    {
+        Print("⚠️ VOLATILITÉ ANORMALE! ATR: ", currentATR, " | Moyenne: ", avgATR, " | Ratio: ", volatilityRatio);
+        Print("🛑 PAUSE ", PauseMinutesIfAnomaly, " minutes");
+
+        volatilityPauseUntil = TimeCurrent() + (PauseMinutesIfAnomaly * 60);
+        volatilityAnomalyDetected = true;
+        return false;
+    }
+
+    volatilityAnomalyDetected = false;
+    return true;
+}
+
+//+------------------------------------------------------------------+
+//| Expert tick function V9 (avec vérifications news + volatilité)    |
 //+------------------------------------------------------------------+
 void OnTick()
 {
@@ -237,6 +375,19 @@ void OnTick()
 
     if(!UpdateIndicators())
         return;
+
+    // V9: Vérifications de sécurité
+    if(!IsEconomicNewsSafe())
+    {
+        // Print("⏸️ Trading pausé: News EUR HIGH IMPACT proche");
+        return;
+    }
+
+    if(!IsVolatilityNormal())
+    {
+        // Print("⏸️ Trading pausé: Volatilité anormale détectée");
+        return;
+    }
 
     // Gérer les positions existantes
     ManageOpenPositions();
@@ -296,7 +447,7 @@ bool UpdateIndicators()
 //+------------------------------------------------------------------+
 void AnalyzeMarket()
 {
-    Print("🔍 Analyse XAU/USD (GOLD) en cours...");
+    Print("🔍 Analyse XAU/USD en cours...");
 
     // 1. VÉRIFIER EMA CROSSOVER (TRIGGER PRINCIPAL)
     bool goldenCross = DetectGoldenCross();
@@ -847,7 +998,7 @@ bool SendSignalToGuardian(SignalData &signal)
 void OpenPosition(SignalData &signal)
 {
     Print("════════════════════════════════════════");
-    Print("📈 OUVERTURE POSITION XAU/USD (GOLD)");
+    Print("📈 OUVERTURE POSITION XAU/USD");
     Print("════════════════════════════════════════");
     Print("Direction: ", signal.direction);
     Print("Entry: ", signal.entry_price);
