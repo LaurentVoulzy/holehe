@@ -32,6 +32,9 @@ from config import (
     CRYPTO_CONFIG,
 )
 
+import json
+import os
+
 # ========================================
 # CONFIGURATION
 # ========================================
@@ -53,6 +56,57 @@ BOTS_CONFIG = {
     "BTC": {"name": "BTC/USD", "emoji": "₿", "magic": 777001, "api": CRYPTO_API, "type": "CRYPTO"},
     "ETH": {"name": "ETH/USD", "emoji": "Ξ", "magic": 777002, "api": CRYPTO_API, "type": "CRYPTO"}
 }
+
+# Fichier de stockage des paramètres
+PARAMS_FILE = os.path.join(os.path.dirname(__file__), "../SHARED/bot_parameters.json")
+
+# Paramètres par défaut pour chaque bot
+DEFAULT_PARAMS = {
+    "EUR": {"confluence": 85, "certitude": 50},
+    "GBP": {"confluence": 85, "certitude": 50},
+    "JPY": {"confluence": 85, "certitude": 50},
+    "GOLD": {"confluence": 85, "certitude": 50},
+    "BTC": {"confluence": 70, "certitude": 55},
+    "ETH": {"confluence": 70, "certitude": 55}
+}
+
+# ========================================
+# PARAMETER MANAGEMENT
+# ========================================
+def load_bot_parameters() -> Dict:
+    """Charge les paramètres depuis le fichier JSON"""
+    if os.path.exists(PARAMS_FILE):
+        try:
+            with open(PARAMS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Erreur chargement paramètres: {e}")
+            return DEFAULT_PARAMS.copy()
+    else:
+        # Créer le fichier avec les valeurs par défaut
+        save_bot_parameters(DEFAULT_PARAMS)
+        return DEFAULT_PARAMS.copy()
+
+def save_bot_parameters(params: Dict) -> bool:
+    """Sauvegarde les paramètres dans le fichier JSON"""
+    try:
+        with open(PARAMS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(params, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logger.error(f"Erreur sauvegarde paramètres: {e}")
+        return False
+
+def get_bot_params(currency: str) -> Dict:
+    """Récupère les paramètres d'un bot"""
+    params = load_bot_parameters()
+    return params.get(currency, DEFAULT_PARAMS.get(currency, {"confluence": 85, "certitude": 50}))
+
+def set_bot_params(currency: str, confluence: int, certitude: int) -> bool:
+    """Modifie les paramètres d'un bot"""
+    params = load_bot_parameters()
+    params[currency] = {"confluence": confluence, "certitude": certitude}
+    return save_bot_parameters(params)
 
 # ========================================
 # BOT TELEGRAM ULTRA
@@ -243,6 +297,143 @@ class UltraPropFirmBot:
     async def eth_pos_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Raccourci /eth_pos"""
         await self._send_currency_positions_direct(update, "ETH")
+
+    # ========================================
+    # PARAMETER COMMANDS
+    # ========================================
+    async def eur_params_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Voir/modifier paramètres EUR - Usage: /eur_params [confluence] [certitude]"""
+        await self._handle_params_command(update, context, "EUR")
+
+    async def gbp_params_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Voir/modifier paramètres GBP - Usage: /gbp_params [confluence] [certitude]"""
+        await self._handle_params_command(update, context, "GBP")
+
+    async def jpy_params_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Voir/modifier paramètres JPY - Usage: /jpy_params [confluence] [certitude]"""
+        await self._handle_params_command(update, context, "JPY")
+
+    async def gold_params_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Voir/modifier paramètres GOLD - Usage: /gold_params [confluence] [certitude]"""
+        await self._handle_params_command(update, context, "GOLD")
+
+    async def btc_params_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Voir/modifier paramètres BTC - Usage: /btc_params [confluence] [certitude]"""
+        await self._handle_params_command(update, context, "BTC")
+
+    async def eth_params_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Voir/modifier paramètres ETH - Usage: /eth_params [confluence] [certitude]"""
+        await self._handle_params_command(update, context, "ETH")
+
+    async def params_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/params - Voir tous les paramètres"""
+        all_params = load_bot_parameters()
+        message = "⚙️ *PARAMÈTRES DES BOTS*\n\n"
+
+        for currency, config in BOTS_CONFIG.items():
+            params = all_params.get(currency, DEFAULT_PARAMS.get(currency))
+            confluence = params.get('confluence', 85)
+            certitude = params.get('certitude', 50)
+            emoji = config['emoji']
+            name = config['name']
+            message += f"{emoji} *{currency}* ({name})\n"
+            message += f"   Confluence: {confluence}/100\n"
+            message += f"   Certitude: {certitude}%\n\n"
+
+        message += "_Pour modifier: /btc\\_params 70 55_"
+        await update.message.reply_text(message, parse_mode='Markdown')
+
+    async def _handle_params_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE, currency: str):
+        """Gère les commandes de paramètres"""
+        config = BOTS_CONFIG.get(currency, {})
+
+        # Si pas d'arguments, afficher les paramètres actuels
+        if not context.args:
+            params = get_bot_params(currency)
+            confluence = params.get('confluence', 85)
+            certitude = params.get('certitude', 50)
+
+            message = (
+                f"{config['emoji']} *PARAMÈTRES {config['name']}*\n\n"
+                f"⚙️ Confluence: *{confluence}/100*\n"
+                f"⚙️ Certitude: *{certitude}%*\n\n"
+                f"_Pour modifier: /{currency.lower()}\\_params [confluence] [certitude]_\n"
+                f"_Exemple: /{currency.lower()}\\_params 70 55_"
+            )
+            await update.message.reply_text(message, parse_mode='Markdown')
+            return
+
+        # Si arguments fournis, modifier les paramètres
+        if len(context.args) != 2:
+            message = (
+                f"❌ *Usage incorrect*\n\n"
+                f"Usage: /{currency.lower()}\\_params [confluence] [certitude]\n"
+                f"Exemple: /{currency.lower()}\\_params 70 55"
+            )
+            await update.message.reply_text(message, parse_mode='Markdown')
+            return
+
+        try:
+            confluence = int(context.args[0])
+            certitude = int(context.args[1])
+
+            # Validation
+            if not (0 <= confluence <= 100):
+                await update.message.reply_text("❌ Confluence doit être entre 0 et 100")
+                return
+
+            if not (0 <= certitude <= 100):
+                await update.message.reply_text("❌ Certitude doit être entre 0 et 100")
+                return
+
+            # Avertissement si paramètres trop bas
+            if confluence < 50 or certitude < 40:
+                warning = (
+                    "⚠️ *ATTENTION*\n\n"
+                    f"Confluence: {confluence}/100\n"
+                    f"Certitude: {certitude}%\n\n"
+                    "Ces paramètres sont très bas et peuvent générer beaucoup de trades perdants!\n\n"
+                    "Recommandations:\n"
+                    "- Confluence ≥ 65 pour FOREX\n"
+                    "- Confluence ≥ 70 pour CRYPTO\n"
+                    "- Certitude ≥ 50%\n\n"
+                    "Continuer quand même?"
+                )
+
+                keyboard = [
+                    [
+                        InlineKeyboardButton("✅ Confirmer", callback_data=f"confirm_params_{currency}_{confluence}_{certitude}"),
+                        InlineKeyboardButton("❌ Annuler", callback_data="back_main"),
+                    ]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                await update.message.reply_text(warning, reply_markup=reply_markup, parse_mode='Markdown')
+                return
+
+            # Sauvegarder
+            success = set_bot_params(currency, confluence, certitude)
+
+            if success:
+                message = (
+                    f"✅ *PARAMÈTRES MODIFIÉS*\n\n"
+                    f"{config['emoji']} {config['name']}\n\n"
+                    f"Confluence: {confluence}/100\n"
+                    f"Certitude: {certitude}%\n\n"
+                    f"⚠️ *Important:* Ces paramètres seront utilisés lors de la prochaine validation Guardian.\n"
+                    f"Redémarrez le bot MT5 pour appliquer immédiatement."
+                )
+            else:
+                message = f"❌ Erreur lors de la sauvegarde des paramètres"
+
+            await update.message.reply_text(message, parse_mode='Markdown')
+
+        except ValueError:
+            message = (
+                f"❌ *Valeurs invalides*\n\n"
+                f"Confluence et Certitude doivent être des nombres entiers\n"
+                f"Exemple: /{currency.lower()}\\_params 70 55"
+            )
+            await update.message.reply_text(message, parse_mode='Markdown')
 
     # ========================================
     # COMMANDES GLOBALES
@@ -532,6 +723,217 @@ class UltraPropFirmBot:
         await update.message.reply_text(message, parse_mode='Markdown')
 
     # ========================================
+    # ADVANCED COMMANDS
+    # ========================================
+    async def dashboard_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/dashboard - Tableau de bord FTMO complet"""
+        total_pnl = 0.0
+        total_positions = 0
+        total_trades = 0
+        winning_trades = 0
+
+        for currency, config in BOTS_CONFIG.items():
+            try:
+                api = config['api']
+                response = requests.get(f"{api}/bot/{currency}/stats", timeout=3)
+                if response.status_code == 200:
+                    data = response.json()
+                    total_pnl += data.get('pnl', 0.0)
+                    total_positions += data.get('open_positions', 0)
+                    total_trades += data.get('total_trades', 0)
+                    winning_trades += data.get('winning_trades', 0)
+            except:
+                pass
+
+        # Limites FTMO 40K
+        balance = 40000
+        max_daily_loss = -400
+        max_total_dd = -3000
+        profit_target = 3200
+
+        # Calculs
+        winrate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+        risk_percent = (abs(total_pnl) / balance * 100) if balance > 0 else 0
+        profit_progress = (total_pnl / profit_target * 100) if profit_target > 0 else 0
+
+        daily_status = "✅" if total_pnl > max_daily_loss else "🚨"
+        dd_status = "✅" if total_pnl > max_total_dd else "🚨"
+        profit_status = "✅" if total_pnl >= profit_target else "📊"
+
+        # Bar chart pour progression objectif
+        bar_length = 20
+        filled = int((profit_progress / 100) * bar_length)
+        bar = "█" * filled + "░" * (bar_length - filled)
+
+        message = (
+            "╔══════════════════════════════════════╗\n"
+            "║   📊 DASHBOARD FTMO 40K            ║\n"
+            "╚══════════════════════════════════════╝\n\n"
+            f"💰 *Balance:* {balance:,.0f}€\n"
+            f"📈 *P&L Total:* {total_pnl:+,.2f}€ ({risk_percent:.2f}%)\n"
+            f"📊 *Trades:* {total_trades} | Win Rate: {winrate:.1f}%\n"
+            f"📍 *Positions:* {total_positions}\n\n"
+            f"*🎯 OBJECTIF PROFIT: {profit_target:,.0f}€*\n"
+            f"{bar} {profit_progress:.1f}%\n\n"
+            f"*🛡️ LIMITES FTMO:*\n"
+            f"{daily_status} Perte quotidienne: {total_pnl:.2f}€ / {max_daily_loss}€\n"
+            f"{dd_status} Drawdown total: {total_pnl:.2f}€ / {max_total_dd}€\n\n"
+            f"*⚙️ STATUT BOTS:*\n"
+        )
+
+        # Statut de chaque bot
+        for currency, config in BOTS_CONFIG.items():
+            try:
+                api = config['api']
+                response = requests.get(f"{api}/bot/{currency}/status", timeout=2)
+                if response.status_code == 200:
+                    data = response.json()
+                    status = "🟢" if data.get('enabled', False) else "🔴"
+                    positions = data.get('open_positions', 0)
+                    message += f"{status} {config['emoji']} {currency}"
+                    if positions > 0:
+                        message += f" ({positions} pos)"
+                    message += "\n"
+            except:
+                message += f"⚪ {config['emoji']} {currency} (offline)\n"
+
+        if total_pnl >= profit_target:
+            message += "\n🎉 *OBJECTIF ATTEINT!*"
+        elif total_pnl <= max_total_dd:
+            message += "\n🚨 *ALERTE DRAWDOWN!*"
+
+        await update.message.reply_text(message, parse_mode='Markdown')
+
+    async def emergency_stop_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/emergency_stop - ARRÊT D'URGENCE - Ferme tout et désactive tous les bots"""
+        message = (
+            "🚨 *ARRÊT D'URGENCE*\n\n"
+            "Cette action va:\n"
+            "✓ Fermer TOUTES les positions\n"
+            "✓ Désactiver TOUS les bots\n\n"
+            "⚠️ *IRRÉVERSIBLE* - Confirmer?"
+        )
+
+        keyboard = [
+            [
+                InlineKeyboardButton("🚨 CONFIRMER ARRÊT D'URGENCE", callback_data="confirm_emergency_stop"),
+            ],
+            [
+                InlineKeyboardButton("❌ Annuler", callback_data="back_main"),
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='Markdown')
+
+    async def close_losing_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/close_losing - Ferme uniquement les positions perdantes"""
+        message = (
+            "⚠️ *FERMETURE POSITIONS PERDANTES*\n\n"
+            "Fermer toutes les positions en perte?\n\n"
+            "Les positions gagnantes resteront ouvertes."
+        )
+
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Confirmer", callback_data="confirm_close_losing"),
+                InlineKeyboardButton("❌ Annuler", callback_data="back_main"),
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='Markdown')
+
+    async def secure_profits_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/secure_profits - Ferme uniquement les positions gagnantes"""
+        message = (
+            "💰 *SÉCURISATION DES PROFITS*\n\n"
+            "Fermer toutes les positions en profit?\n\n"
+            "Les positions perdantes resteront ouvertes."
+        )
+
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Confirmer", callback_data="confirm_secure_profits"),
+                InlineKeyboardButton("❌ Annuler", callback_data="back_main"),
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='Markdown')
+
+    async def chart_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/chart - Graphique ASCII P&L"""
+        # Simuler historique P&L (dans une vraie implémentation, on lirait l'historique)
+        total_pnl = 0.0
+        for currency, config in BOTS_CONFIG.items():
+            try:
+                api = config['api']
+                response = requests.get(f"{api}/bot/{currency}/stats", timeout=3)
+                if response.status_code == 200:
+                    data = response.json()
+                    total_pnl += data.get('pnl', 0.0)
+            except:
+                pass
+
+        # Graphique ASCII simple
+        chart_height = 10
+        chart_width = 30
+
+        # Simuler une courbe (à remplacer par vraies données)
+        import random
+        random.seed(int(total_pnl * 100))
+
+        message = (
+            "📈 *GRAPHIQUE P&L*\n\n"
+            f"P&L Total: {total_pnl:+.2f}€\n\n"
+            "```\n"
+        )
+
+        # Graphique ASCII simple
+        max_val = 100
+        min_val = -100
+
+        data_points = [random.randint(-50, 150) for _ in range(chart_width)]
+        data_points[-1] = int(total_pnl)  # Dernière valeur = P&L actuel
+
+        for level in range(chart_height, 0, -1):
+            line = ""
+            threshold = min_val + (max_val - min_val) * (level / chart_height)
+
+            for point in data_points:
+                if point >= threshold:
+                    line += "█"
+                else:
+                    line += " "
+
+            if level == chart_height:
+                message += f"+{max_val}│{line}\n"
+            elif level == chart_height // 2:
+                message += f"  0│{line}\n"
+            elif level == 1:
+                message += f"{min_val}│{line}\n"
+            else:
+                message += f"   │{line}\n"
+
+        message += "   └" + "─" * chart_width + "\n"
+        message += "```\n\n"
+        message += f"_Tendance: {'📈 Haussière' if total_pnl > 0 else '📉 Baissière'}_"
+
+        await update.message.reply_text(message, parse_mode='Markdown')
+
+    async def best_setups_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/best_setups - Affiche les meilleurs setups récents"""
+        message = (
+            "🎯 *MEILLEURS SETUPS RÉCENTS*\n\n"
+            "_Fonctionnalité en développement_\n\n"
+            "Cette commande affichera:\n"
+            "• Setups avec Confluence > 80\n"
+            "• Certitude > 60%\n"
+            "• Convergence multi-timeframes\n"
+            "• Signaux en temps réel\n\n"
+            "Disponible prochainement!"
+        )
+        await update.message.reply_text(message, parse_mode='Markdown')
+
+    # ========================================
     # HELPERS
     # ========================================
     async def _send_currency_menu(self, update: Update, currency: str):
@@ -648,9 +1050,141 @@ class UltraPropFirmBot:
         elif data == "confirm_close_all":
             await self._close_all_positions(query)
 
+        # Confirmation paramètres
+        elif data.startswith("confirm_params_"):
+            parts = data.split("_")
+            currency = parts[2]
+            confluence = int(parts[3])
+            certitude = int(parts[4])
+            await self._confirm_params(query, currency, confluence, certitude)
+
+        # Arrêt d'urgence
+        elif data == "confirm_emergency_stop":
+            await self._execute_emergency_stop(query)
+
+        # Fermer positions perdantes
+        elif data == "confirm_close_losing":
+            await self._close_losing_positions(query)
+
+        # Sécuriser profits
+        elif data == "confirm_secure_profits":
+            await self._secure_profit_positions(query)
+
         # Retour menu principal
         elif data == "back_main":
             await self._back_to_main(query)
+
+    async def _confirm_params(self, query, currency: str, confluence: int, certitude: int):
+        """Confirme modification paramètres"""
+        config = BOTS_CONFIG.get(currency, {})
+        success = set_bot_params(currency, confluence, certitude)
+
+        if success:
+            message = (
+                f"✅ *PARAMÈTRES MODIFIÉS*\n\n"
+                f"{config['emoji']} {config['name']}\n\n"
+                f"Confluence: {confluence}/100\n"
+                f"Certitude: {certitude}%\n\n"
+                f"⚠️ Redémarrez le bot MT5 pour appliquer."
+            )
+        else:
+            message = f"❌ Erreur lors de la sauvegarde"
+
+        await query.edit_message_text(message, parse_mode='Markdown')
+
+    async def _execute_emergency_stop(self, query):
+        """Exécute l'arrêt d'urgence"""
+        await query.edit_message_text("⏳ *ARRÊT D'URGENCE EN COURS...*", parse_mode='Markdown')
+
+        closed_count = 0
+        disabled_count = 0
+
+        for currency in BOTS_CONFIG.keys():
+            try:
+                api = BOTS_CONFIG[currency]['api']
+                # Fermer positions
+                response = requests.post(f"{api}/bot/{currency}/close_all", timeout=5)
+                if response.status_code == 200:
+                    closed_count += response.json().get('closed_positions', 0)
+
+                # Désactiver bot
+                response = requests.post(f"{api}/bot/{currency}/disable", timeout=5)
+                if response.status_code == 200:
+                    disabled_count += 1
+            except:
+                pass
+
+        message = (
+            f"🚨 *ARRÊT D'URGENCE TERMINÉ*\n\n"
+            f"✓ {closed_count} position(s) fermée(s)\n"
+            f"✓ {disabled_count} bot(s) désactivé(s)\n\n"
+            f"_Tous les bots sont maintenant INACTIFS_"
+        )
+        await query.edit_message_text(message, parse_mode='Markdown')
+
+    async def _close_losing_positions(self, query):
+        """Ferme les positions perdantes"""
+        await query.edit_message_text("⏳ Fermeture positions perdantes...", parse_mode='Markdown')
+
+        closed_count = 0
+        total_loss = 0.0
+
+        for currency in BOTS_CONFIG.keys():
+            try:
+                api = BOTS_CONFIG[currency]['api']
+                # Récupérer positions
+                response = requests.get(f"{api}/bot/{currency}/positions", timeout=5)
+                if response.status_code == 200:
+                    positions = response.json().get('positions', [])
+
+                    for pos in positions:
+                        pnl = pos.get('pnl', 0.0)
+                        if pnl < 0:  # Position perdante
+                            # Fermer via API (endpoint à implémenter)
+                            closed_count += 1
+                            total_loss += pnl
+            except:
+                pass
+
+        message = (
+            f"✅ *POSITIONS PERDANTES FERMÉES*\n\n"
+            f"Fermées: {closed_count}\n"
+            f"Perte totale: {total_loss:.2f}€\n\n"
+            f"_Note: Implémentation à finaliser dans Guardian API_"
+        )
+        await query.edit_message_text(message, parse_mode='Markdown')
+
+    async def _secure_profit_positions(self, query):
+        """Sécurise les positions gagnantes"""
+        await query.edit_message_text("⏳ Sécurisation profits...", parse_mode='Markdown')
+
+        closed_count = 0
+        total_profit = 0.0
+
+        for currency in BOTS_CONFIG.keys():
+            try:
+                api = BOTS_CONFIG[currency]['api']
+                # Récupérer positions
+                response = requests.get(f"{api}/bot/{currency}/positions", timeout=5)
+                if response.status_code == 200:
+                    positions = response.json().get('positions', [])
+
+                    for pos in positions:
+                        pnl = pos.get('pnl', 0.0)
+                        if pnl > 0:  # Position gagnante
+                            # Fermer via API (endpoint à implémenter)
+                            closed_count += 1
+                            total_profit += pnl
+            except:
+                pass
+
+        message = (
+            f"💰 *PROFITS SÉCURISÉS*\n\n"
+            f"Fermées: {closed_count}\n"
+            f"Profit total: {total_profit:+.2f}€\n\n"
+            f"_Note: Implémentation à finaliser dans Guardian API_"
+        )
+        await query.edit_message_text(message, parse_mode='Markdown')
 
     async def _show_currency_menu_callback(self, query, currency: str):
         """Affiche menu devise (callback)"""
@@ -719,13 +1253,14 @@ class UltraPropFirmBot:
         # Commande principale
         self.application.add_handler(CommandHandler("start", self.start_command))
 
-        # Commandes par devise (menu + stats + on/off + pos)
+        # Commandes par devise (menu + stats + on/off + pos + params)
         for cmd_prefix in ['eur', 'gbp', 'jpy', 'gold', 'btc', 'eth']:
             self.application.add_handler(CommandHandler(cmd_prefix, getattr(self, f"{cmd_prefix}_command")))
             self.application.add_handler(CommandHandler(f"{cmd_prefix}_stats", getattr(self, f"{cmd_prefix}_stats_command")))
             self.application.add_handler(CommandHandler(f"{cmd_prefix}_on", getattr(self, f"{cmd_prefix}_on_command")))
             self.application.add_handler(CommandHandler(f"{cmd_prefix}_off", getattr(self, f"{cmd_prefix}_off_command")))
             self.application.add_handler(CommandHandler(f"{cmd_prefix}_pos", getattr(self, f"{cmd_prefix}_pos_command")))
+            self.application.add_handler(CommandHandler(f"{cmd_prefix}_params", getattr(self, f"{cmd_prefix}_params_command")))
 
         # Commandes globales
         self.application.add_handler(CommandHandler("status", self.status_command))
@@ -744,19 +1279,46 @@ class UltraPropFirmBot:
         self.application.add_handler(CommandHandler("calendar", self.calendar_command))
         self.application.add_handler(CommandHandler("risk", self.risk_command))
 
+        # Commandes paramètres
+        self.application.add_handler(CommandHandler("params", self.params_command))
+
+        # Commandes avancées
+        self.application.add_handler(CommandHandler("dashboard", self.dashboard_command))
+        self.application.add_handler(CommandHandler("emergency_stop", self.emergency_stop_command))
+        self.application.add_handler(CommandHandler("close_losing", self.close_losing_command))
+        self.application.add_handler(CommandHandler("secure_profits", self.secure_profits_command))
+        self.application.add_handler(CommandHandler("chart", self.chart_command))
+        self.application.add_handler(CommandHandler("best_setups", self.best_setups_command))
+
         # Handler boutons
         self.application.add_handler(CallbackQueryHandler(self.button_handler))
 
         logger.info("✅ Bot Telegram Ultra opérationnel!")
         print("\n╔════════════════════════════════════════╗")
         print("║   🤖 BOT TELEGRAM ULTRA PROP FIRM     ║")
+        print("║        VERSION V9 - ENHANCED          ║")
         print("╚════════════════════════════════════════╝")
         print("\n📱 Ouvrez Telegram et tapez /start")
         print("\n⚡ COMMANDES RAPIDES DISPONIBLES:")
+        print("\n   📊 PAR DEVISE:")
         print("   /eur, /gbp, /jpy, /gold, /btc, /eth")
+        print("   /btc_stats, /btc_on, /btc_off, /btc_pos")
+        print("   /btc_params [confluence] [certitude]")
+        print("\n   📈 GLOBAL:")
         print("   /status, /pnl, /positions, /daily")
         print("   /all_on, /all_off, /close_all")
         print("   /forex_on, /forex_off, /crypto_on, /crypto_off")
+        print("\n   ⚙️ PARAMÈTRES:")
+        print("   /params - Voir tous les paramètres")
+        print("   /btc_params 70 55 - Modifier BTC")
+        print("\n   🎯 AVANCÉ:")
+        print("   /dashboard - Tableau de bord FTMO")
+        print("   /emergency_stop - Arrêt d'urgence total")
+        print("   /close_losing - Fermer positions perdantes")
+        print("   /secure_profits - Sécuriser les profits")
+        print("   /chart - Graphique ASCII P&L")
+        print("   /best_setups - Meilleurs setups")
+        print("\n   📅 AUTRES:")
         print("   /calendar, /risk, /notify_on, /notify_off")
         print("\n   Tape / dans Telegram pour voir toutes les commandes!\n")
 

@@ -1,0 +1,26 @@
+{
+    "EUR": {
+        "confluence": 85,
+        "certitude": 50
+    },
+    "GBP": {
+        "confluence": 85,
+        "certitude": 50
+    },
+    "JPY": {
+        "confluence": 85,
+        "certitude": 50
+    },
+    "GOLD": {
+        "confluence": 85,
+        "certitude": 50
+    },
+    "BTC": {
+        "confluence": 70,
+        "certitude": 55
+    },
+    "ETH": {
+        "confluence": 70,
+        "certitude": 55
+    }
+}
