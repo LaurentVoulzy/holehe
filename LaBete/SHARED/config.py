@@ -196,17 +196,32 @@ CONFLUENCE_WEIGHTS = {
 # ========================================
 # PÉRIODES INTERDITES (CRITICAL!)
 # ========================================
-FORBIDDEN_PERIODS = [
+# ========================================
+# PÉRIODES INTERDITES PAR TYPE DE MARCHÉ
+# ========================================
+
+# FOREX : Marché fermé le week-end
+FORBIDDEN_PERIODS_FOREX = [
     # Noël / Nouvel An (CRUCIAL - cramage le 30 déc!)
     {"start": "12-24", "end": "01-03", "reason": "Noël/Nouvel An - Période morte"},
 
     # Autres jours fériés majeurs
     {"start": "04-14", "end": "04-17", "reason": "Pâques"},  # Dates variables
 
-    # Weekends
+    # Weekends (FOREX seulement)
     {"day": "Friday", "after": "16:00", "reason": "Weekend approaching"},
     {"day": "Sunday", "before": "23:00", "reason": "Weekend - Low liquidity"},
 ]
+
+# CRYPTO : Marché 24/7, seulement jours fériés extrêmes
+FORBIDDEN_PERIODS_CRYPTO = [
+    # Noël / Nouvel An uniquement (liquidité très faible)
+    {"start": "12-24", "end": "01-03", "reason": "Noël/Nouvel An - Période morte"},
+    # PAS de restriction week-end pour crypto !
+]
+
+# Backward compatibility (utilise FOREX par défaut)
+FORBIDDEN_PERIODS = FORBIDDEN_PERIODS_FOREX
 
 # News à éviter absolument
 HIGH_IMPACT_NEWS = [
@@ -403,20 +418,31 @@ BACKTEST_CONFIG = {
 # FONCTIONS UTILITAIRES
 # ========================================
 
-def is_trading_allowed(current_time: datetime = None) -> tuple[bool, str]:
+def is_trading_allowed(current_time: datetime = None, market_type: str = "FOREX") -> tuple[bool, str]:
     """
     Vérifie si le trading est autorisé à ce moment
+
+    Args:
+        current_time: datetime à vérifier (défaut: maintenant)
+        market_type: "FOREX" ou "CRYPTO" (défaut: "FOREX")
+
     Returns: (allowed: bool, reason: str)
     """
     if current_time is None:
         current_time = datetime.now()
+
+    # Sélectionner les bonnes périodes selon le type de marché
+    if market_type.upper() == "CRYPTO":
+        forbidden_periods = FORBIDDEN_PERIODS_CRYPTO
+    else:
+        forbidden_periods = FORBIDDEN_PERIODS_FOREX
 
     # Vérifier périodes interdites
     current_date = current_time.strftime("%m-%d")
     current_day = current_time.strftime("%A")
     current_hour = current_time.strftime("%H:%M")
 
-    for period in FORBIDDEN_PERIODS:
+    for period in forbidden_periods:
         if "start" in period and "end" in period:
             if period["start"] <= current_date <= period["end"]:
                 return False, period["reason"]

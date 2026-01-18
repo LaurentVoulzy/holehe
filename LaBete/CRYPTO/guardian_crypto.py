@@ -155,8 +155,8 @@ class CryptoGuardian:
         if self.kill_switch_active:
             return False, "❌ Kill Switch actif"
 
-        # 2. Trading autorisé?
-        allowed, reason = is_trading_allowed()
+        # 2. Trading autorisé? (CRYPTO = 24/7)
+        allowed, reason = is_trading_allowed(market_type="CRYPTO")
         if not allowed:
             return False, f"❌ {reason}"
 
@@ -222,21 +222,28 @@ class CryptoGuardian:
     # ----------------------------------------
 
     def _is_weekend_period(self) -> bool:
-        """Vérifie si on est dans la période weekend dangereuse"""
-        now = datetime.now()
-        day = now.weekday()  # 0=Lundi, 6=Dimanche
-        hour = now.hour
+        """
+        Vérifie si on est dans la période weekend dangereuse
+        CRYPTO: Toujours False (marché 24/7)
+        """
+        # CRYPTO trade 24/7, pas de restriction week-end !
+        return False
 
-        # Vendredi après 20h
-        if day == 4 and hour >= 20:
-            return True
-
-        # Samedi toute la journée
-        if day == 5:
-            return True
-
-        # Dimanche avant 22h
-        if day == 6 and hour < 22:
+        # Code désactivé pour crypto (gardé pour référence)
+        # now = datetime.now()
+        # day = now.weekday()  # 0=Lundi, 6=Dimanche
+        # hour = now.hour
+        #
+        # # Vendredi après 20h
+        # if day == 4 and hour >= 20:
+        #     return True
+        #
+        # # Samedi toute la journée
+        # if day == 5:
+        #     return True
+        #
+        # # Dimanche avant 22h
+        # if day == 6 and hour < 22:
             return True
 
         return False
@@ -888,9 +895,9 @@ def main():
     Path("logs").mkdir(exist_ok=True)
     init_database()
 
-    allowed, reason = is_trading_allowed()
+    allowed, reason = is_trading_allowed(market_type="CRYPTO")
     if not allowed:
-        logger.warning(f"⚠️ Trading non autorisé: {reason}")
+        logger.warning(f"⚠️ Trading CRYPTO non autorisé: {reason}")
         guardian._send_telegram_alert(f"⚠️ Trading CRYPTO non autorisé: {reason}")
 
     if guardian._is_weekend_period():
