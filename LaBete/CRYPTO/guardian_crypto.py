@@ -229,25 +229,6 @@ class CryptoGuardian:
         # CRYPTO trade 24/7, pas de restriction week-end !
         return False
 
-        # Code désactivé pour crypto (gardé pour référence)
-        # now = datetime.now()
-        # day = now.weekday()  # 0=Lundi, 6=Dimanche
-        # hour = now.hour
-        #
-        # # Vendredi après 20h
-        # if day == 4 and hour >= 20:
-        #     return True
-        #
-        # # Samedi toute la journée
-        # if day == 5:
-        #     return True
-        #
-        # # Dimanche avant 22h
-        # if day == 6 and hour < 22:
-            return True
-
-        return False
-
     def _detect_whale_activity(self, signal: Dict) -> bool:
         """Détecte l'activité de whales (volume anormal)"""
         volume_ratio = signal.get('volume_ratio', 1.0)
