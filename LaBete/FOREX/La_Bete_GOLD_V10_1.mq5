@@ -1,14 +1,14 @@
 //+------------------------------------------------------------------+
-//|                                           La_Bete_EUR_V10.1.mq5     |
+//|                                           La_Bete_GOLD_V10_1.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| BOT SPÉCIALISÉ EUR/USD V10.1 - POWER TRADE STRATEGY                  |
+//| BOT SPÉCIALISÉ XAU/USD V10 (GOLD) - POWER TRADE STRATEGY                  |
 //| - MA2 × MA12 Crossover (High Frequency Trading)                   |
 //| - Support/Resistance Detection & Visualization (H1)               |
 //| - Buy/Sell Limit Orders on S/R Levels                            |
 //| - Dynamic ATR-based SL/TP (Multiple Take Profits)                 |
 //| - Triple TP (50% / 30% / 20%) + BE + Trailing                     |
-//| - ForexFactory High Impact News EUR (15min pause)                 |
+//| - ForexFactory High Impact News USD (GOLD) (15min pause)                 |
 //| - FTMO Protection (Daily -€2K, Total -€4K)                        |
 //+------------------------------------------------------------------+
 
@@ -26,10 +26,10 @@
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
 //+------------------------------------------------------------------+
-input group "=== CONFIGURATION EUR/USD V10 ==="
-input double   RiskPercent = 0.3;            // Risque par trade (%)
-input int      MagicNumber = 777100;         // Magic Number EUR
-input string   TradeComment = "LaBete_EUR_V10.1"; // Commentaire
+input group "=== CONFIGURATION XAU/USD V10 (GOLD) ==="
+input double   RiskPercent = 0.2;            // Risque par trade (%)
+input int      MagicNumber = 777103;         // Magic Number EUR
+input string   TradeComment = "LaBete_GOLD_V10_1"; // Commentaire
 
 input group "=== STRATÉGIE MA2 × MA12 ==="
 input int      MA_Fast = 2;                  // MA rapide (ultra court terme)
@@ -39,7 +39,7 @@ input int      MinCertaintyPercent = 30;     // Certitude minimum (%)
 
 input group "=== STOP LOSS / TAKE PROFIT (ATR) ==="
 input int      SL_MinPips = 30;              // SL minimum EUR (pips)
-input int      SL_MaxPips = 100;             // SL maximum EUR (pips)
+input int      SL_MaxPips = 150;             // SL maximum EUR (pips)
 input double   ATR_Multiplier_SL = 2.0;      // ATR × 2.0 pour EUR
 input double   TP1_RR = 2.0;                 // TP1 Risk:Reward 1:2
 input double   TP2_RR = 3.0;                 // TP2 Risk:Reward 1:3
@@ -87,7 +87,7 @@ input int      API_Timeout = 5000;           // Timeout API (ms)
 input group "=== NEWS ÉCONOMIQUES EUR ==="
 input bool     CheckEconomicNews = true;     // Vérifier news EUR HIGH IMPACT
 input int      NewsBufferMinutes = 15;       // 15min avant/après news
-input string   NewsCurrency = "EUR";         // Devise à filtrer
+input string   NewsCurrency = "USD";         // Devise à filtrer
 
 input group "=== PROTECTION FTMO ==="
 input double   MaxDailyLoss = 2000;          // Limite daily loss (€)
@@ -195,9 +195,9 @@ struct SignalData {
 int OnInit()
 {
     Print("╔══════════════════════════════════════════════════════════╗");
-    Print("║          🐺 LA BÊTE EUR V10 POWER TRADE 🐺               ║");
+    Print("║          🐺 LA BÊTE GOLD V10 POWER TRADE 🐺               ║");
     Print("║     Stratégie MA2 × MA12 - High Frequency Trading        ║");
-    Print("║   Support/Résistance + Buy/Sell Limit + News EUR         ║");
+    Print("║   Support/Résistance + Buy/Sell Limit + News USD (GOLD)         ║");
     Print("╚══════════════════════════════════════════════════════════╝");
 
     // Vérifier symbole
@@ -264,7 +264,7 @@ int OnInit()
 
     systemInitialized = true;
 
-    Print("✅ Système EUR V10 initialisé avec succès");
+    Print("✅ Système GOLD V10 initialisé avec succès");
     Print("🔗 Guardian API: ", GuardianURL);
     Print("💰 Risque: ", RiskPercent, "% × ", riskMultiplier);
     Print("🎯 Confluence min: ", MinConfluenceScore, "/100");
@@ -289,7 +289,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
-    Print("🛑 La Bête EUR V10 arrêtée. Raison: ", reason);
+    Print("🛑 La Bête GOLD V10 arrêtée. Raison: ", reason);
 
     // Annuler tous les ordres limites actifs
     for(int i = 0; i < 10; i++)
@@ -1036,7 +1036,7 @@ bool IsEconomicNewsSafe()
 //+------------------------------------------------------------------+
 void AnalyzeMarket()
 {
-    Print("🔍 Analyse EUR/USD V10 (MA", MA_Fast, " × MA", MA_Slow, ")...");
+    Print("🔍 Analyse XAU/USD V10 (GOLD) (MA", MA_Fast, " × MA", MA_Slow, ")...");
 
     // 1. SIGNAL MA CROSSOVER
     bool crossUp = DetectCrossUp();    // MA2 croise MA12 vers le HAUT
