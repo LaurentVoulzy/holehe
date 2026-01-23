@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                           La_Bete_ETH_V10.mq5     |
+//|                                           La_Bete_ETH_V10.1.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
 //| BOT SPÉCIALISÉ ETH/USD V10.1 - POWER TRADE STRATEGY                  |

@@ -117,12 +117,12 @@ echo ║  💰 Guardian CRYPTO: http://localhost:5001            ║
 echo ║  📱 Telegram Bot   : Tapez /start                     ║
 echo ║                                                        ║
 echo ║  📊 Ouvrez maintenant MT5 et chargez les bots V10.1:    ║
-echo ║     - La_Bete_EUR_V10.mq5 sur EURUSD M30              ║
-echo ║     - La_Bete_GBP_V10.mq5 sur GBPUSD M30              ║
-echo ║     - La_Bete_JPY_V10.mq5 sur USDJPY M30              ║
-echo ║     - La_Bete_GOLD_V10.mq5 sur XAUUSD M30             ║
-echo ║     - La_Bete_BTC_V10.mq5 sur BTCUSD M30              ║
-echo ║     - La_Bete_ETH_V10.mq5 sur ETHUSD M30              ║
+echo ║     - La_Bete_EUR_V10.1.mq5 sur EURUSD M30              ║
+echo ║     - La_Bete_GBP_V10.1.mq5 sur GBPUSD M30              ║
+echo ║     - La_Bete_JPY_V10.1.mq5 sur USDJPY M30              ║
+echo ║     - La_Bete_GOLD_V10.1.mq5 sur XAUUSD M30             ║
+echo ║     - La_Bete_BTC_V10.1.mq5 sur BTCUSD M30              ║
+echo ║     - La_Bete_ETH_V10.1.mq5 sur ETHUSD M30              ║
 echo ║                                                        ║
 echo ╚════════════════════════════════════════════════════════╝
 echo.

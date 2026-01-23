@@ -1,13 +1,14 @@
 //+------------------------------------------------------------------+
-//|                                           La_Bete_BTC_V10.mq5     |
+//|                                           La_Bete_GBP_V10.1.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| BOT SPÉCIALISÉ BTC/USD V10.1 - POWER TRADE STRATEGY                  |
+//| BOT SPÉCIALISÉ GBP/USD V10.1 - POWER TRADE STRATEGY                  |
 //| - MA2 × MA12 Crossover (High Frequency Trading)                   |
-//| - Support/Resistance Detection & Visualization                     |
+//| - Support/Resistance Detection & Visualization (H1)               |
+//| - Buy/Sell Limit Orders on S/R Levels                            |
 //| - Dynamic ATR-based SL/TP (Multiple Take Profits)                 |
 //| - Triple TP (50% / 30% / 20%) + BE + Trailing                     |
-//| - ForexFactory High Impact News (15min pause)                     |
+//| - ForexFactory High Impact News GBP (15min pause)                 |
 //| - FTMO Protection (Daily -€2K, Total -€4K)                        |
 //+------------------------------------------------------------------+
 
@@ -25,10 +26,10 @@
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
 //+------------------------------------------------------------------+
-input group "=== CONFIGURATION BTC/USD V10 ==="
-input double   RiskPercent = 0.25;           // Risque par trade (%)
-input int      MagicNumber = 777001;         // Magic Number ETH
-input string   TradeComment = "LaBete_BTC_V10.1"; // Commentaire
+input group "=== CONFIGURATION GBP/USD V10 ==="
+input double   RiskPercent = 0.25;            // Risque par trade (%)
+input int      MagicNumber = 777101;         // Magic Number EUR
+input string   TradeComment = "LaBete_GBP_V10.1"; // Commentaire
 
 input group "=== STRATÉGIE MA2 × MA12 ==="
 input int      MA_Fast = 2;                  // MA rapide (ultra court terme)
@@ -37,9 +38,9 @@ input int      MinConfluenceScore = 35;      // Score confluence minimum (/100)
 input int      MinCertaintyPercent = 30;     // Certitude minimum (%)
 
 input group "=== STOP LOSS / TAKE PROFIT (ATR) ==="
-input int      SL_MinPips = 50;              // SL minimum CRYPTO (pips)
-input int      SL_MaxPips = 200;             // SL maximum CRYPTO (pips)
-input double   ATR_Multiplier_SL = 2.5;      // ATR × 2.5 pour CRYPTO
+input int      SL_MinPips = 30;              // SL minimum EUR (pips)
+input int      SL_MaxPips = 100;             // SL maximum EUR (pips)
+input double   ATR_Multiplier_SL = 2.0;      // ATR × 2.0 pour EUR
 input double   TP1_RR = 2.0;                 // TP1 Risk:Reward 1:2
 input double   TP2_RR = 3.0;                 // TP2 Risk:Reward 1:3
 input double   TP3_RR = 5.0;                 // TP3 Risk:Reward 1:5
@@ -71,21 +72,22 @@ input color    ResistanceColor = clrRed;     // Couleur Résistance
 input group "=== ORDRES LIMITES SUR S/R ==="
 input bool     UseLimitOrders = true;        // Activer Buy/Sell Limit sur S/R
 input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
-input double   LimitOrderOffset = 25.0;      // Distance du S/R (pips) - marché respire
+input double   LimitOrderOffset = 15.0;      // Distance du S/R (pips) - marché respire
 input double   LimitSL_ATR_Multiplier = 1.5; // SL = ATR H1 × 1.5 (dynamique)
-input double   LimitSL_MinPips = 70.0;       // SL minimum CRYPTO (pips)
-input double   LimitSL_MaxPips = 180.0;      // SL maximum CRYPTO (pips)
+input double   LimitSL_MinPips = 30.0;       // SL minimum (pips)
+input double   LimitSL_MaxPips = 70.0;       // SL maximum (pips)
 input double   LimitTP_RR = 3.0;             // TP = SL × 3.0 pour ordres limites
 input int      LimitOrderExpiry = 240;       // Expiration ordres (min, 0=jamais)
 
 input group "=== API PYTHON GUARDIAN ==="
-input string   GuardianURL = "http://localhost:5001/validate_signal";
+input string   GuardianURL = "http://localhost:5000/validate_signal";
 input bool     RequireApproval = true;       // Requiert approbation Guardian
 input int      API_Timeout = 5000;           // Timeout API (ms)
 
-input group "=== NEWS ÉCONOMIQUES (CRYPTO = OFF) ==="
-input bool     CheckEconomicNews = false;    // Crypto = 24/7 (pas de news)
-input int      NewsBufferMinutes = 15;       // 15min avant/après (si activé)
+input group "=== NEWS ÉCONOMIQUES EUR ==="
+input bool     CheckEconomicNews = true;     // Vérifier news EUR HIGH IMPACT
+input int      NewsBufferMinutes = 15;       // 15min avant/après news
+input string   NewsCurrency = "GBP";         // Devise à filtrer
 
 input group "=== PROTECTION FTMO ==="
 input double   MaxDailyLoss = 2000;          // Limite daily loss (€)
@@ -193,9 +195,9 @@ struct SignalData {
 int OnInit()
 {
     Print("╔══════════════════════════════════════════════════════════╗");
-    Print("║          🐺 LA BÊTE BTC V10 POWER TRADE 🐺               ║");
+    Print("║          🐺 LA BÊTE GBP V10 POWER TRADE 🐺               ║");
     Print("║     Stratégie MA2 × MA12 - High Frequency Trading        ║");
-    Print("║   Support/Résistance + Protection FTMO Renforcée         ║");
+    Print("║   Support/Résistance + Buy/Sell Limit + News GBP         ║");
     Print("╚══════════════════════════════════════════════════════════╝");
 
     // Vérifier symbole
@@ -262,7 +264,7 @@ int OnInit()
 
     systemInitialized = true;
 
-    Print("✅ Système BTC V10 initialisé avec succès");
+    Print("✅ Système GBP V10 initialisé avec succès");
     Print("🔗 Guardian API: ", GuardianURL);
     Print("💰 Risque: ", RiskPercent, "% × ", riskMultiplier);
     Print("🎯 Confluence min: ", MinConfluenceScore, "/100");
@@ -287,7 +289,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
-    Print("🛑 La Bête BTC V10 arrêtée. Raison: ", reason);
+    Print("🛑 La Bête GBP V10 arrêtée. Raison: ", reason);
 
     // Annuler tous les ordres limites actifs
     for(int i = 0; i < 10; i++)
@@ -938,21 +940,21 @@ void ManageLimitOrders()
         bool cancelOrder = false;
         string cancelReason = "";
 
-        // CONDITION 1 : S/R cassé (±40 pips pour CRYPTO)
+        // CONDITION 1 : S/R cassé (±20 pips pour FOREX)
         if(activeLimitOrders[i].is_buy)
         {
-            if(currentPrice < (activeLimitOrders[i].sr_level - pipValue * 40))
+            if(currentPrice < (activeLimitOrders[i].sr_level - pipValue * 20))
             {
                 cancelOrder = true;
-                cancelReason = "Support cassé -40 pips";
+                cancelReason = "Support cassé -20 pips";
             }
         }
         else
         {
-            if(currentPrice > (activeLimitOrders[i].sr_level + pipValue * 40))
+            if(currentPrice > (activeLimitOrders[i].sr_level + pipValue * 20))
             {
                 cancelOrder = true;
-                cancelReason = "Résistance cassée +40 pips";
+                cancelReason = "Résistance cassée +20 pips";
             }
         }
 
@@ -1034,7 +1036,7 @@ bool IsEconomicNewsSafe()
 //+------------------------------------------------------------------+
 void AnalyzeMarket()
 {
-    Print("🔍 Analyse BTC/USD V10 (MA", MA_Fast, " × MA", MA_Slow, ")...");
+    Print("🔍 Analyse GBP/USD V10 (MA", MA_Fast, " × MA", MA_Slow, ")...");
 
     // 1. SIGNAL MA CROSSOVER
     bool crossUp = DetectCrossUp();    // MA2 croise MA12 vers le HAUT
@@ -1435,7 +1437,7 @@ bool SendSignalToGuardian(SignalData &signal)
 void OpenPosition(SignalData &signal)
 {
     Print("════════════════════════════════════════");
-    Print("📈 OUVERTURE POSITION BTC/USD V10");
+    Print("📈 OUVERTURE POSITION ETH/USD V10");
     Print("════════════════════════════════════════");
     Print("Direction: ", signal.direction);
     Print("Entry: ", signal.entry_price);

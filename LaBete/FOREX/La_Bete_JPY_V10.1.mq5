@@ -1,14 +1,14 @@
 //+------------------------------------------------------------------+
-//|                                           La_Bete_EUR_V10.mq5     |
+//|                                           La_Bete_JPY_V10.1.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| BOT SPÉCIALISÉ EUR/USD V10.1 - POWER TRADE STRATEGY                  |
+//| BOT SPÉCIALISÉ USD/JPY V10.1 - POWER TRADE STRATEGY                  |
 //| - MA2 × MA12 Crossover (High Frequency Trading)                   |
 //| - Support/Resistance Detection & Visualization (H1)               |
 //| - Buy/Sell Limit Orders on S/R Levels                            |
 //| - Dynamic ATR-based SL/TP (Multiple Take Profits)                 |
 //| - Triple TP (50% / 30% / 20%) + BE + Trailing                     |
-//| - ForexFactory High Impact News EUR (15min pause)                 |
+//| - ForexFactory High Impact News JPY (15min pause)                 |
 //| - FTMO Protection (Daily -€2K, Total -€4K)                        |
 //+------------------------------------------------------------------+
 
@@ -26,10 +26,10 @@
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
 //+------------------------------------------------------------------+
-input group "=== CONFIGURATION EUR/USD V10 ==="
+input group "=== CONFIGURATION USD/JPY V10 ==="
 input double   RiskPercent = 0.3;            // Risque par trade (%)
-input int      MagicNumber = 777100;         // Magic Number EUR
-input string   TradeComment = "LaBete_EUR_V10.1"; // Commentaire
+input int      MagicNumber = 777102;         // Magic Number EUR
+input string   TradeComment = "LaBete_JPY_V10.1"; // Commentaire
 
 input group "=== STRATÉGIE MA2 × MA12 ==="
 input int      MA_Fast = 2;                  // MA rapide (ultra court terme)
@@ -87,7 +87,7 @@ input int      API_Timeout = 5000;           // Timeout API (ms)
 input group "=== NEWS ÉCONOMIQUES EUR ==="
 input bool     CheckEconomicNews = true;     // Vérifier news EUR HIGH IMPACT
 input int      NewsBufferMinutes = 15;       // 15min avant/après news
-input string   NewsCurrency = "EUR";         // Devise à filtrer
+input string   NewsCurrency = "JPY";         // Devise à filtrer
 
 input group "=== PROTECTION FTMO ==="
 input double   MaxDailyLoss = 2000;          // Limite daily loss (€)
@@ -195,9 +195,9 @@ struct SignalData {
 int OnInit()
 {
     Print("╔══════════════════════════════════════════════════════════╗");
-    Print("║          🐺 LA BÊTE EUR V10 POWER TRADE 🐺               ║");
+    Print("║          🐺 LA BÊTE JPY V10 POWER TRADE 🐺               ║");
     Print("║     Stratégie MA2 × MA12 - High Frequency Trading        ║");
-    Print("║   Support/Résistance + Buy/Sell Limit + News EUR         ║");
+    Print("║   Support/Résistance + Buy/Sell Limit + News JPY         ║");
     Print("╚══════════════════════════════════════════════════════════╝");
 
     // Vérifier symbole
@@ -264,7 +264,7 @@ int OnInit()
 
     systemInitialized = true;
 
-    Print("✅ Système EUR V10 initialisé avec succès");
+    Print("✅ Système JPY V10 initialisé avec succès");
     Print("🔗 Guardian API: ", GuardianURL);
     Print("💰 Risque: ", RiskPercent, "% × ", riskMultiplier);
     Print("🎯 Confluence min: ", MinConfluenceScore, "/100");
@@ -289,7 +289,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
-    Print("🛑 La Bête EUR V10 arrêtée. Raison: ", reason);
+    Print("🛑 La Bête JPY V10 arrêtée. Raison: ", reason);
 
     // Annuler tous les ordres limites actifs
     for(int i = 0; i < 10; i++)
@@ -1036,7 +1036,7 @@ bool IsEconomicNewsSafe()
 //+------------------------------------------------------------------+
 void AnalyzeMarket()
 {
-    Print("🔍 Analyse EUR/USD V10 (MA", MA_Fast, " × MA", MA_Slow, ")...");
+    Print("🔍 Analyse USD/JPY V10 (MA", MA_Fast, " × MA", MA_Slow, ")...");
 
     // 1. SIGNAL MA CROSSOVER
     bool crossUp = DetectCrossUp();    // MA2 croise MA12 vers le HAUT
