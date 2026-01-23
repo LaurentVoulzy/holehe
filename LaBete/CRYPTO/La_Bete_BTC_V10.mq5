@@ -868,6 +868,49 @@ void ManageLimitOrders()
     double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
     double pipValue = _Point * 10;
 
+    // 1. PROTECTION FTMO : Annuler TOUS les ordres si proche des limites
+    double dailyLoss = MathAbs(todayProfit);
+    double totalDrawdown = MathAbs(startBalance - account.Balance());
+
+    if(dailyLoss >= 1500 || totalDrawdown >= 3000)
+    {
+        Print("🚨 PROTECTION FTMO : Annulation de TOUS les ordres limites");
+        Print("   Daily Loss: -€", dailyLoss, " | Drawdown: -€", totalDrawdown);
+
+        for(int i = 0; i < 10; i++)
+        {
+            if(activeLimitOrders[i].is_active)
+            {
+                trade.OrderDelete(activeLimitOrders[i].ticket);
+                activeLimitOrders[i].is_active = false;
+            }
+        }
+        return;
+    }
+
+    // 2. ATR EXPLOSIF : Annuler TOUS si volatilité anormale
+    double currentATR_H1 = lastATR_H1[0];
+    double avgATR = 0;
+    for(int k = 0; k < 20 && k < ArraySize(lastATR_H1); k++)
+        avgATR += lastATR_H1[k];
+    avgATR /= MathMin(20, ArraySize(lastATR_H1));
+
+    if(currentATR_H1 > avgATR * 1.8)
+    {
+        Print("🚨 ATR EXPLOSIF : ", currentATR_H1, " > ", avgATR * 1.8, " - Annulation ordres");
+
+        for(int i = 0; i < 10; i++)
+        {
+            if(activeLimitOrders[i].is_active)
+            {
+                trade.OrderDelete(activeLimitOrders[i].ticket);
+                activeLimitOrders[i].is_active = false;
+            }
+        }
+        return;
+    }
+
+    // 3. VÉRIFICATION INDIVIDUELLE DES ORDRES
     for(int i = 0; i < 10; i++)
     {
         if(!activeLimitOrders[i].is_active)
@@ -892,34 +935,41 @@ void ManageLimitOrders()
             continue;
         }
 
-        // Vérifier si le niveau S/R a été cassé
-        bool srBroken = false;
+        bool cancelOrder = false;
+        string cancelReason = "";
 
+        // CONDITION 1 : S/R cassé (±40 pips pour CRYPTO)
         if(activeLimitOrders[i].is_buy)
         {
-            // Buy Limit sur support : cassé si prix passe EN-DESSOUS du support
-            if(currentPrice < (activeLimitOrders[i].sr_level - pipValue * 5))
+            if(currentPrice < (activeLimitOrders[i].sr_level - pipValue * 40))
             {
-                srBroken = true;
-                Print("⚠️ Support cassé à ", activeLimitOrders[i].sr_level, " - Annulation BUY LIMIT");
+                cancelOrder = true;
+                cancelReason = "Support cassé -40 pips";
             }
         }
         else
         {
-            // Sell Limit sur résistance : cassé si prix passe AU-DESSUS de la résistance
-            if(currentPrice > (activeLimitOrders[i].sr_level + pipValue * 5))
+            if(currentPrice > (activeLimitOrders[i].sr_level + pipValue * 40))
             {
-                srBroken = true;
-                Print("⚠️ Résistance cassée à ", activeLimitOrders[i].sr_level, " - Annulation SELL LIMIT");
+                cancelOrder = true;
+                cancelReason = "Résistance cassée +40 pips";
             }
         }
 
-        if(srBroken)
+        // CONDITION 2 : Ordre ancien (>3h sans exécution)
+        if(TimeCurrent() - activeLimitOrders[i].placed_time > 10800) // 3h
         {
-            // Annuler l'ordre
+            cancelOrder = true;
+            cancelReason = "Ordre ancien (>3h) - S/R obsolète";
+        }
+
+        if(cancelOrder)
+        {
+            Print("⚠️ Annulation ordre limite: ", cancelReason, " | Ticket: ", activeLimitOrders[i].ticket);
+
             if(trade.OrderDelete(activeLimitOrders[i].ticket))
             {
-                Print("✅ Ordre limite annulé (S/R cassé): ", activeLimitOrders[i].ticket);
+                Print("✅ Ordre annulé avec succès");
             }
 
             activeLimitOrders[i].is_active = false;
