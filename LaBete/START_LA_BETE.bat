@@ -2,72 +2,89 @@
 cls
 
 echo.
-echo ========================================================
+echo ╔════════════════════════════════════════════════════════╗
+echo ║                                                        ║
+echo ║          🐺 LA BÊTE V10 - SYSTÈME COMPLET 🐺          ║
+echo ║                                                        ║
+echo ║        Démarrage Guardian FOREX + CRYPTO + Telegram   ║
+echo ║                                                        ║
+echo ╚════════════════════════════════════════════════════════╝
 echo.
-echo           LA BETE - LANCEMENT DU SYSTEME
-echo.
-echo            Systeme Dual Forex + Crypto
-echo          Ultra-Securise pour Prop Firm
-echo.
-echo ========================================================
-echo.
-echo.
-echo Demarrage de La Bete...
-echo.
-timeout /t 2 /nobreak >nul
 
-REM Verifier si Python est installe
+REM Vérifier Python
 python --version >nul 2>&1
-if errorlevel 1 (
-    echo ERREUR: Python n'est pas installe ou pas dans le PATH!
-    echo.
-    echo Veuillez installer Python 3.12+ depuis https://www.python.org/
+if %errorlevel% neq 0 (
+    echo ❌ Python n'est pas installé!
+    echo    Téléchargez Python 3.12+ sur python.org
     pause
     exit /b 1
 )
 
-echo [OK] Python detecte
+echo ✅ Python détecté
 echo.
-timeout /t 1 /nobreak >nul
 
-REM Lancer Guardian FOREX
-echo [1/3] Lancement Guardian FOREX...
-start "Guardian FOREX" cmd /k "cd /d %~dp0FOREX && python guardian_forex.py"
+REM Créer dossiers LOGS
+if not exist "LOGS" mkdir LOGS
+if not exist "LOGS\FOREX" mkdir LOGS\FOREX
+if not exist "LOGS\CRYPTO" mkdir LOGS\CRYPTO
+
+echo.
+echo 🚀 DÉMARRAGE LA BÊTE V10...
+echo.
+
+echo [1/3] 🐺 Guardian FOREX (port 5000)...
+cd FOREX
+start "Guardian FOREX V10" cmd /k "python guardian_forex.py"
+cd ..
 timeout /t 2 /nobreak >nul
+echo ✅ Guardian FOREX OK
 
-REM Lancer Guardian CRYPTO
-echo [2/3] Lancement Guardian CRYPTO...
-start "Guardian CRYPTO" cmd /k "cd /d %~dp0CRYPTO && python guardian_crypto.py"
+echo [2/3] 💰 Guardian CRYPTO (port 5001)...
+cd CRYPTO
+start "Guardian CRYPTO V10" cmd /k "python guardian_crypto.py"
+cd ..
 timeout /t 2 /nobreak >nul
+echo ✅ Guardian CRYPTO OK
 
-REM Lancer Bot Telegram
-echo [3/3] Lancement Bot Telegram...
-start "Bot Telegram" cmd /k "cd /d %~dp0SHARED && python telegram_bot.py"
+echo [3/3] 📱 Bot Telegram Ultra V10...
+cd CORE
+start "Telegram Bot Ultra V10" cmd /k "python telegram_bot_ultra.py"
+cd ..
 timeout /t 2 /nobreak >nul
+echo ✅ Bot Telegram Ultra V10 OK
 
 echo.
-echo ========================================================
+echo ╔════════════════════════════════════════════════════════╗
+echo ║                                                        ║
+echo ║          ✅ LA BÊTE V10 DÉMARRÉE AVEC SUCCÈS ✅        ║
+echo ║                                                        ║
+echo ║  🐺 Guardian FOREX : http://localhost:5000            ║
+echo ║  💰 Guardian CRYPTO: http://localhost:5001            ║
+echo ║  📱 Telegram Bot   : Tapez /start dans votre bot      ║
+echo ║                                                        ║
+echo ║  NOUVEAUTÉS V10:                                       ║
+echo ║  • Stratégie MA2×MA12 (5-10 trades/semaine)           ║
+echo ║  • Support/Résistance auto H1 (lignes visibles)       ║
+echo ║  • Buy/Sell Limit sur S/R avec SL intelligent         ║
+echo ║  • TP multiples: TP1/TP2/TP3 + Trailing Stop          ║
+echo ║  • Protection FTMO: -€2K daily, -€4K total            ║
+echo ║                                                        ║
+echo ║  📊 PROCHAINES ÉTAPES:                                 ║
+echo ║  1. Ouvrir MT5                                         ║
+echo ║  2. Charger les bots V10 sur charts M30:              ║
+echo ║     - La_Bete_EUR_V10.mq5 sur EURUSD                  ║
+echo ║     - La_Bete_GBP_V10.mq5 sur GBPUSD                  ║
+echo ║     - La_Bete_JPY_V10.mq5 sur USDJPY                  ║
+echo ║     - La_Bete_GOLD_V10.mq5 sur XAUUSD                 ║
+echo ║     - La_Bete_BTC_V10.mq5 sur BTCUSD                  ║
+echo ║     - La_Bete_ETH_V10.mq5 sur ETHUSD                  ║
+echo ║  3. Activer "Algo Trading" (bouton vert)              ║
+echo ║  4. Vérifier lignes S/R vertes/rouges sur charts      ║
+echo ║                                                        ║
+echo ║  ⚠️ NE PAS FERMER LES 3 FENÊTRES CMD!                  ║
+echo ║                                                        ║
+echo ╚════════════════════════════════════════════════════════╝
 echo.
-echo SYSTEME DEMARRE AVEC SUCCES!
-echo.
-echo 3 fenetres CMD ont ete ouvertes:
-echo    1. Guardian FOREX (port 5000)
-echo    2. Guardian CRYPTO (port 5001)
-echo    3. Bot Telegram
-echo.
-echo PROCHAINES ETAPES:
-echo    1. Ouvrir MetaTrader 5 (2 instances)
-echo    2. Activer les bots MT5 sur graphiques M30:
-echo       - EURUSD M30 -^> La_Bete_FOREX_V6_Ultimate
-echo       - BTCUSD M30 -^> La_Bete_CRYPTO_V6_Ultimate
-echo    3. Ouvrir Telegram et envoyer /start a votre bot
-echo    4. Verifier avec /stats que tout fonctionne
-echo.
-echo IMPORTANT: NE PAS FERMER LES 3 FENETRES CMD!
-echo            Elles doivent rester ouvertes pendant le trading.
-echo.
-echo ========================================================
-echo.
-echo Que La Bete soit avec toi!
+echo 🐺 Que La Bête V10 soit avec toi! 🚀
 echo.
 pause
