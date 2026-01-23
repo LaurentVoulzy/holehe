@@ -62,10 +62,19 @@ input bool     CheckRSI = true;              // Éviter zones extrêmes RSI
 
 input group "=== SUPPORT / RÉSISTANCE ==="
 input bool     ShowSR = true;                // Afficher S/R sur graphique
+input ENUM_TIMEFRAMES SR_Timeframe = PERIOD_H1; // Timeframe pour S/R (H1 recommandé)
 input int      SR_Lookback = 50;             // Barres pour détecter S/R
 input int      SR_Strength = 2;              // Force S/R (nb touches min)
 input color    SupportColor = clrLime;       // Couleur Support
 input color    ResistanceColor = clrRed;     // Couleur Résistance
+
+input group "=== ORDRES LIMITES SUR S/R ==="
+input bool     UseLimitOrders = true;        // Activer Buy/Sell Limit sur S/R
+input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
+input double   LimitOrderOffset = 5.0;       // Distance du S/R (pips)
+input double   LimitSL_Offset = 10.0;        // SL sous/au-dessus S/R (pips)
+input double   LimitTP_RR = 2.0;             // TP = SL × 2.0 pour ordres limites
+input int      LimitOrderExpiry = 240;       // Expiration ordres (min, 0=jamais)
 
 input group "=== API PYTHON GUARDIAN ==="
 input string   GuardianURL = "http://localhost:5001/validate_signal";
@@ -94,10 +103,16 @@ CAccountInfo   account;
 int handleMA_Fast, handleMA_Slow;
 int handleRSI, handleATR;
 
+// Handles pour S/R sur H1
+int handleATR_H1;
+
 // Buffers
 double lastMA_Fast[], lastMA_Slow[];
 double lastRSI[], lastATR[];
 double lastHigh[], lastLow[], lastClose[], lastOpen[];
+
+// Buffers H1 pour S/R
+double lastHigh_H1[], lastLow_H1[], lastClose_H1[], lastATR_H1[];
 
 // État du système
 bool systemInitialized = false;
@@ -123,6 +138,20 @@ SRLevel supportLevels[5];
 SRLevel resistanceLevels[5];
 int supportCount = 0;
 int resistanceCount = 0;
+
+// V10: Ordres Limites sur S/R
+struct LimitOrderInfo {
+    ulong ticket;
+    double price;
+    bool is_buy;
+    double sr_level;
+    datetime placed_time;
+    bool is_active;
+};
+
+LimitOrderInfo activeLimitOrders[10];
+int limitOrdersCount = 0;
+datetime lastLimitOrderCheck = 0;
 
 // V10: Protection FTMO
 double dailyStartBalance = 0;
@@ -183,9 +212,13 @@ int OnInit()
     handleRSI = iRSI(_Symbol, PERIOD_CURRENT, RSI_Period, PRICE_CLOSE);
     handleATR = iATR(_Symbol, PERIOD_CURRENT, ATR_Period);
 
+    // Initialiser ATR sur H1 pour S/R
+    handleATR_H1 = iATR(_Symbol, SR_Timeframe, ATR_Period);
+
     // Vérifier les handles
     if(handleMA_Fast == INVALID_HANDLE || handleMA_Slow == INVALID_HANDLE ||
-       handleRSI == INVALID_HANDLE || handleATR == INVALID_HANDLE)
+       handleRSI == INVALID_HANDLE || handleATR == INVALID_HANDLE ||
+       handleATR_H1 == INVALID_HANDLE)
     {
         Print("❌ ERREUR: Impossible d'initialiser les indicateurs!");
         return(INIT_FAILED);
@@ -201,12 +234,26 @@ int OnInit()
     ArraySetAsSeries(lastClose, true);
     ArraySetAsSeries(lastOpen, true);
 
+    // Configurer arrays H1
+    ArraySetAsSeries(lastHigh_H1, true);
+    ArraySetAsSeries(lastLow_H1, true);
+    ArraySetAsSeries(lastClose_H1, true);
+    ArraySetAsSeries(lastATR_H1, true);
+
     // Initialiser S/R
     for(int i = 0; i < 5; i++)
     {
         supportLevels[i].is_valid = false;
         resistanceLevels[i].is_valid = false;
     }
+
+    // Initialiser ordres limites
+    for(int i = 0; i < 10; i++)
+    {
+        activeLimitOrders[i].is_active = false;
+        activeLimitOrders[i].ticket = 0;
+    }
+    limitOrdersCount = 0;
 
     // Initialiser protection FTMO
     dailyStartBalance = account.Balance();
@@ -223,7 +270,9 @@ int OnInit()
     Print("════════════════════════════════════════════════════════");
     Print("🆕 NOUVEAUTÉS V10:");
     Print("📊 Stratégie: MA", MA_Fast, " × MA", MA_Slow, " Crossover");
-    Print("📈 S/R: ", (ShowSR ? "✅ ACTIVÉ" : "❌ OFF"), " (Lookback: ", SR_Lookback, " bars)");
+    Print("📈 S/R: ", (ShowSR ? "✅ ACTIVÉ" : "❌ OFF"), " (", EnumToString(SR_Timeframe), " | Lookback: ", SR_Lookback, " bars)");
+    Print("🎯 Ordres Limites: ", (UseLimitOrders ? "✅ ACTIVÉ" : "❌ OFF"),
+          (UseLimitOrders ? " (Max: " + IntegerToString(MaxLimitOrders) + " | TP: 1:" + DoubleToString(LimitTP_RR, 1) + ")" : ""));
     Print("🛡️ FTMO: Daily -€", MaxDailyLoss, " | Total -€", MaxDrawdown);
     Print("📰 News: ", (CheckEconomicNews ? "✅ ACTIVÉ" : "❌ OFF (Crypto 24/7)"));
     Print("╚══════════════════════════════════════════════════════════╝");
@@ -238,6 +287,15 @@ void OnDeinit(const int reason)
 {
     Print("🛑 La Bête ETH V10 arrêtée. Raison: ", reason);
 
+    // Annuler tous les ordres limites actifs
+    for(int i = 0; i < 10; i++)
+    {
+        if(activeLimitOrders[i].is_active && activeLimitOrders[i].ticket > 0)
+        {
+            trade.OrderDelete(activeLimitOrders[i].ticket);
+        }
+    }
+
     // Nettoyer les objets graphiques S/R
     DeleteAllSRObjects();
 
@@ -245,6 +303,7 @@ void OnDeinit(const int reason)
     IndicatorRelease(handleMA_Slow);
     IndicatorRelease(handleRSI);
     IndicatorRelease(handleATR);
+    IndicatorRelease(handleATR_H1);
 }
 
 //+------------------------------------------------------------------+
@@ -278,6 +337,13 @@ void OnTick()
     {
         DetectSupportResistance();
         DisplaySROnChart();
+    }
+
+    // V10: Placer et gérer ordres limites sur S/R
+    if(UseLimitOrders && ShowSR)
+    {
+        PlaceLimitOrdersOnSR();
+        ManageLimitOrders();
     }
 
     // Gérer les positions existantes
@@ -415,10 +481,16 @@ void CheckFTMOLimits()
 }
 
 //+------------------------------------------------------------------+
-//| V10: Détection Support/Résistance                                 |
+//| V10: Détection Support/Résistance sur H1                          |
 //+------------------------------------------------------------------+
 void DetectSupportResistance()
 {
+    // Copier les données H1
+    if(CopyHigh(_Symbol, SR_Timeframe, 0, SR_Lookback, lastHigh_H1) < 0) return;
+    if(CopyLow(_Symbol, SR_Timeframe, 0, SR_Lookback, lastLow_H1) < 0) return;
+    if(CopyClose(_Symbol, SR_Timeframe, 0, SR_Lookback, lastClose_H1) < 0) return;
+    if(CopyBuffer(handleATR_H1, 0, 0, 1, lastATR_H1) < 0) return;
+
     // Reset
     supportCount = 0;
     resistanceCount = 0;
@@ -429,14 +501,14 @@ void DetectSupportResistance()
         resistanceLevels[i].is_valid = false;
     }
 
-    // Chercher Swing Highs et Swing Lows
+    // Chercher Swing Highs et Swing Lows sur H1
     for(int i = SR_Strength; i < SR_Lookback - SR_Strength; i++)
     {
         // RESISTANCE = Swing High (plus haut local)
         bool isSwingHigh = true;
         for(int j = 1; j <= SR_Strength; j++)
         {
-            if(lastHigh[i] <= lastHigh[i-j] || lastHigh[i] <= lastHigh[i+j])
+            if(lastHigh_H1[i] <= lastHigh_H1[i-j] || lastHigh_H1[i] <= lastHigh_H1[i+j])
             {
                 isSwingHigh = false;
                 break;
@@ -447,11 +519,11 @@ void DetectSupportResistance()
         {
             // Vérifier que ce niveau n'est pas trop proche d'un existant
             bool isDuplicate = false;
-            double tolerance = lastATR[0] * 0.5;
+            double tolerance = lastATR_H1[0] * 0.5;
 
             for(int k = 0; k < resistanceCount; k++)
             {
-                if(MathAbs(lastHigh[i] - resistanceLevels[k].price) < tolerance)
+                if(MathAbs(lastHigh_H1[i] - resistanceLevels[k].price) < tolerance)
                 {
                     isDuplicate = true;
                     resistanceLevels[k].touches++;
@@ -461,10 +533,10 @@ void DetectSupportResistance()
 
             if(!isDuplicate)
             {
-                resistanceLevels[resistanceCount].price = lastHigh[i];
+                resistanceLevels[resistanceCount].price = lastHigh_H1[i];
                 resistanceLevels[resistanceCount].touches = 1;
                 resistanceLevels[resistanceCount].is_support = false;
-                resistanceLevels[resistanceCount].last_touch = iTime(_Symbol, PERIOD_CURRENT, i);
+                resistanceLevels[resistanceCount].last_touch = iTime(_Symbol, SR_Timeframe, i);
                 resistanceLevels[resistanceCount].is_valid = true;
                 resistanceCount++;
             }
@@ -474,7 +546,7 @@ void DetectSupportResistance()
         bool isSwingLow = true;
         for(int j = 1; j <= SR_Strength; j++)
         {
-            if(lastLow[i] >= lastLow[i-j] || lastLow[i] >= lastLow[i+j])
+            if(lastLow_H1[i] >= lastLow_H1[i-j] || lastLow_H1[i] >= lastLow_H1[i+j])
             {
                 isSwingLow = false;
                 break;
@@ -485,11 +557,11 @@ void DetectSupportResistance()
         {
             // Vérifier que ce niveau n'est pas trop proche d'un existant
             bool isDuplicate = false;
-            double tolerance = lastATR[0] * 0.5;
+            double tolerance = lastATR_H1[0] * 0.5;
 
             for(int k = 0; k < supportCount; k++)
             {
-                if(MathAbs(lastLow[i] - supportLevels[k].price) < tolerance)
+                if(MathAbs(lastLow_H1[i] - supportLevels[k].price) < tolerance)
                 {
                     isDuplicate = true;
                     supportLevels[k].touches++;
@@ -499,17 +571,17 @@ void DetectSupportResistance()
 
             if(!isDuplicate)
             {
-                supportLevels[supportCount].price = lastLow[i];
+                supportLevels[supportCount].price = lastLow_H1[i];
                 supportLevels[supportCount].touches = 1;
                 supportLevels[supportCount].is_support = true;
-                supportLevels[supportCount].last_touch = iTime(_Symbol, PERIOD_CURRENT, i);
+                supportLevels[supportCount].last_touch = iTime(_Symbol, SR_Timeframe, i);
                 supportLevels[supportCount].is_valid = true;
                 supportCount++;
             }
         }
     }
 
-    Print("📊 S/R détectés: ", supportCount, " Supports | ", resistanceCount, " Résistances");
+    Print("📊 S/R détectés sur ", EnumToString(SR_Timeframe), ": ", supportCount, " Supports | ", resistanceCount, " Résistances");
 }
 
 //+------------------------------------------------------------------+
@@ -582,6 +654,267 @@ void DeleteAllSRObjects()
            StringFind(name, "ResistanceLabel_") >= 0)
         {
             ObjectDelete(0, name);
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| V10: Place ordres Buy Limit (support) et Sell Limit (résistance) |
+//+------------------------------------------------------------------+
+void PlaceLimitOrdersOnSR()
+{
+    if(!UseLimitOrders)
+        return;
+
+    if(!tradingAllowed)
+        return;
+
+    // Vérifier toutes les 15 minutes
+    if(TimeCurrent() - lastLimitOrderCheck < 900)
+        return;
+
+    lastLimitOrderCheck = TimeCurrent();
+
+    // Compter ordres actifs
+    int activeOrders = 0;
+    for(int i = 0; i < 10; i++)
+    {
+        if(activeLimitOrders[i].is_active)
+            activeOrders++;
+    }
+
+    if(activeOrders >= MaxLimitOrders)
+    {
+        Print("⏸️ Max ordres limites atteint (", activeOrders, "/", MaxLimitOrders, ")");
+        return;
+    }
+
+    double pipValue = _Point * 10;
+    double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+
+    // 1. PLACER BUY LIMIT SUR SUPPORTS
+    for(int i = 0; i < supportCount; i++)
+    {
+        if(!supportLevels[i].is_valid)
+            continue;
+
+        if(activeOrders >= MaxLimitOrders)
+            break;
+
+        double supportPrice = supportLevels[i].price;
+
+        // Vérifier que le prix actuel est AU-DESSUS du support
+        if(currentPrice <= supportPrice)
+            continue;
+
+        // Vérifier qu'il n'y a pas déjà un ordre à ce niveau
+        bool alreadyPlaced = false;
+        for(int j = 0; j < 10; j++)
+        {
+            if(activeLimitOrders[j].is_active &&
+               activeLimitOrders[j].is_buy &&
+               MathAbs(activeLimitOrders[j].sr_level - supportPrice) < pipValue * 2)
+            {
+                alreadyPlaced = true;
+                break;
+            }
+        }
+
+        if(alreadyPlaced)
+            continue;
+
+        // Calculer prix d'entrée (légèrement au-dessus du support)
+        double entryPrice = supportPrice + (LimitOrderOffset * pipValue);
+
+        // Calculer SL (sous le support)
+        double slPrice = supportPrice - (LimitSL_Offset * pipValue);
+        double slPips = (entryPrice - slPrice) / pipValue;
+
+        // Calculer TP
+        double tpPrice = entryPrice + (slPips * LimitTP_RR * pipValue);
+
+        // Calculer lot size (avec ajustement FTMO)
+        double lotSize = CalculateLotSize(slPips, 50); // Certitude fixe 50%
+
+        // Placer Buy Limit
+        datetime expiry = 0;
+        if(LimitOrderExpiry > 0)
+            expiry = TimeCurrent() + (LimitOrderExpiry * 60);
+
+        if(trade.BuyLimit(lotSize, entryPrice, _Symbol, slPrice, tpPrice,
+                          ORDER_TIME_SPECIFIED, expiry, TradeComment + "_BuyLimit_S" + IntegerToString(i)))
+        {
+            // Enregistrer l'ordre
+            for(int j = 0; j < 10; j++)
+            {
+                if(!activeLimitOrders[j].is_active)
+                {
+                    activeLimitOrders[j].ticket = trade.ResultOrder();
+                    activeLimitOrders[j].price = entryPrice;
+                    activeLimitOrders[j].is_buy = true;
+                    activeLimitOrders[j].sr_level = supportPrice;
+                    activeLimitOrders[j].placed_time = TimeCurrent();
+                    activeLimitOrders[j].is_active = true;
+                    activeOrders++;
+                    limitOrdersCount++;
+
+                    Print("✅ BUY LIMIT placé sur Support ", supportPrice, " | Entry: ", entryPrice,
+                          " | SL: ", slPrice, " | TP: ", tpPrice, " | Lot: ", lotSize);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            Print("❌ Erreur BUY LIMIT: ", trade.ResultRetcodeDescription());
+        }
+    }
+
+    // 2. PLACER SELL LIMIT SUR RÉSISTANCES
+    for(int i = 0; i < resistanceCount; i++)
+    {
+        if(!resistanceLevels[i].is_valid)
+            continue;
+
+        if(activeOrders >= MaxLimitOrders)
+            break;
+
+        double resistancePrice = resistanceLevels[i].price;
+
+        // Vérifier que le prix actuel est EN-DESSOUS de la résistance
+        if(currentPrice >= resistancePrice)
+            continue;
+
+        // Vérifier qu'il n'y a pas déjà un ordre à ce niveau
+        bool alreadyPlaced = false;
+        for(int j = 0; j < 10; j++)
+        {
+            if(activeLimitOrders[j].is_active &&
+               !activeLimitOrders[j].is_buy &&
+               MathAbs(activeLimitOrders[j].sr_level - resistancePrice) < pipValue * 2)
+            {
+                alreadyPlaced = true;
+                break;
+            }
+        }
+
+        if(alreadyPlaced)
+            continue;
+
+        // Calculer prix d'entrée (légèrement en-dessous de la résistance)
+        double entryPrice = resistancePrice - (LimitOrderOffset * pipValue);
+
+        // Calculer SL (au-dessus de la résistance)
+        double slPrice = resistancePrice + (LimitSL_Offset * pipValue);
+        double slPips = (slPrice - entryPrice) / pipValue;
+
+        // Calculer TP
+        double tpPrice = entryPrice - (slPips * LimitTP_RR * pipValue);
+
+        // Calculer lot size (avec ajustement FTMO)
+        double lotSize = CalculateLotSize(slPips, 50); // Certitude fixe 50%
+
+        // Placer Sell Limit
+        datetime expiry = 0;
+        if(LimitOrderExpiry > 0)
+            expiry = TimeCurrent() + (LimitOrderExpiry * 60);
+
+        if(trade.SellLimit(lotSize, entryPrice, _Symbol, slPrice, tpPrice,
+                           ORDER_TIME_SPECIFIED, expiry, TradeComment + "_SellLimit_R" + IntegerToString(i)))
+        {
+            // Enregistrer l'ordre
+            for(int j = 0; j < 10; j++)
+            {
+                if(!activeLimitOrders[j].is_active)
+                {
+                    activeLimitOrders[j].ticket = trade.ResultOrder();
+                    activeLimitOrders[j].price = entryPrice;
+                    activeLimitOrders[j].is_buy = false;
+                    activeLimitOrders[j].sr_level = resistancePrice;
+                    activeLimitOrders[j].placed_time = TimeCurrent();
+                    activeLimitOrders[j].is_active = true;
+                    activeOrders++;
+                    limitOrdersCount++;
+
+                    Print("✅ SELL LIMIT placé sur Résistance ", resistancePrice, " | Entry: ", entryPrice,
+                          " | SL: ", slPrice, " | TP: ", tpPrice, " | Lot: ", lotSize);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            Print("❌ Erreur SELL LIMIT: ", trade.ResultRetcodeDescription());
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| V10: Gère les ordres limites (vérifier si cassés, expirés)       |
+//+------------------------------------------------------------------+
+void ManageLimitOrders()
+{
+    if(!UseLimitOrders)
+        return;
+
+    double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+    double pipValue = _Point * 10;
+
+    for(int i = 0; i < 10; i++)
+    {
+        if(!activeLimitOrders[i].is_active)
+            continue;
+
+        // Vérifier si l'ordre existe toujours (MT5)
+        bool orderExists = false;
+        for(int j = 0; j < OrdersTotal(); j++)
+        {
+            ulong ticket = OrderGetTicket(j);
+            if(ticket == activeLimitOrders[i].ticket)
+            {
+                orderExists = true;
+                break;
+            }
+        }
+
+        if(!orderExists)
+        {
+            // Ordre n'existe plus (exécuté, expiré ou annulé)
+            activeLimitOrders[i].is_active = false;
+            continue;
+        }
+
+        // Vérifier si le niveau S/R a été cassé
+        bool srBroken = false;
+
+        if(activeLimitOrders[i].is_buy)
+        {
+            // Buy Limit sur support : cassé si prix passe EN-DESSOUS du support
+            if(currentPrice < (activeLimitOrders[i].sr_level - pipValue * 5))
+            {
+                srBroken = true;
+                Print("⚠️ Support cassé à ", activeLimitOrders[i].sr_level, " - Annulation BUY LIMIT");
+            }
+        }
+        else
+        {
+            // Sell Limit sur résistance : cassé si prix passe AU-DESSUS de la résistance
+            if(currentPrice > (activeLimitOrders[i].sr_level + pipValue * 5))
+            {
+                srBroken = true;
+                Print("⚠️ Résistance cassée à ", activeLimitOrders[i].sr_level, " - Annulation SELL LIMIT");
+            }
+        }
+
+        if(srBroken)
+        {
+            // Annuler l'ordre
+            if(trade.OrderDelete(activeLimitOrders[i].ticket))
+            {
+                Print("✅ Ordre limite annulé (S/R cassé): ", activeLimitOrders[i].ticket);
+            }
+
+            activeLimitOrders[i].is_active = false;
         }
     }
 }
