@@ -72,9 +72,11 @@ input color    ResistanceColor = clrRed;     // Couleur Résistance
 input group "=== ORDRES LIMITES SUR S/R ==="
 input bool     UseLimitOrders = true;        // Activer Buy/Sell Limit sur S/R
 input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
-input double   LimitOrderOffset = 5.0;       // Distance du S/R (pips)
-input double   LimitSL_Offset = 10.0;        // SL sous/au-dessus S/R (pips)
-input double   LimitTP_RR = 2.0;             // TP = SL × 2.0 pour ordres limites
+input double   LimitOrderOffset = 15.0;      // Distance du S/R (pips) - marché respire
+input double   LimitSL_ATR_Multiplier = 1.5; // SL = ATR H1 × 1.5 (dynamique)
+input double   LimitSL_MinPips = 30.0;       // SL minimum (pips)
+input double   LimitSL_MaxPips = 70.0;       // SL maximum (pips)
+input double   LimitTP_RR = 3.0;             // TP = SL × 3.0 pour ordres limites
 input int      LimitOrderExpiry = 240;       // Expiration ordres (min, 0=jamais)
 
 input group "=== API PYTHON GUARDIAN ==="
@@ -728,8 +730,11 @@ void PlaceLimitOrdersOnSR()
         // Calculer prix d'entrée (légèrement au-dessus du support)
         double entryPrice = supportPrice + (LimitOrderOffset * pipValue);
 
-        // Calculer SL (sous le support)
-        double slPrice = supportPrice - (LimitSL_Offset * pipValue);
+        // Calculer SL dynamique basé sur ATR H1
+        double atrH1 = lastATR_H1[0];
+        double slDistance = (atrH1 / _Point / 10) * LimitSL_ATR_Multiplier;
+        slDistance = MathMax(LimitSL_MinPips, MathMin(LimitSL_MaxPips, slDistance));
+        double slPrice = supportPrice - (slDistance * pipValue);
         double slPips = (entryPrice - slPrice) / pipValue;
 
         // Calculer TP
@@ -806,8 +811,11 @@ void PlaceLimitOrdersOnSR()
         // Calculer prix d'entrée (légèrement en-dessous de la résistance)
         double entryPrice = resistancePrice - (LimitOrderOffset * pipValue);
 
-        // Calculer SL (au-dessus de la résistance)
-        double slPrice = resistancePrice + (LimitSL_Offset * pipValue);
+        // Calculer SL dynamique basé sur ATR H1
+        double atrH1 = lastATR_H1[0];
+        double slDistance = (atrH1 / _Point / 10) * LimitSL_ATR_Multiplier;
+        slDistance = MathMax(LimitSL_MinPips, MathMin(LimitSL_MaxPips, slDistance));
+        double slPrice = resistancePrice + (slDistance * pipValue);
         double slPips = (slPrice - entryPrice) / pipValue;
 
         // Calculer TP
