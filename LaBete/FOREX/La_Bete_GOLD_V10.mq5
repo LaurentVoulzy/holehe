@@ -13,7 +13,7 @@
 //+------------------------------------------------------------------+
 
 #property copyright "Yann - La Bête"
-#property version   "10.00"
+#property version   "10.10"
 #property strict
 
 //+------------------------------------------------------------------+
@@ -29,7 +29,7 @@
 input group "=== CONFIGURATION XAU/USD V10 (GOLD) ==="
 input double   RiskPercent = 0.2;            // Risque par trade (%)
 input int      MagicNumber = 777103;         // Magic Number EUR
-input string   TradeComment = "LaBete_GOLD_V10"; // Commentaire
+input string   TradeComment = "LaBete_GOLD_V10.1"; // Commentaire
 
 input group "=== STRATÉGIE MA2 × MA12 ==="
 input int      MA_Fast = 2;                  // MA rapide (ultra court terme)

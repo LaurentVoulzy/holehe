@@ -2,7 +2,7 @@
 //|                                           La_Bete_JPY_V10.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| BOT SPÉCIALISÉ USD/JPY V10 - POWER TRADE STRATEGY                  |
+//| BOT SPÉCIALISÉ USD/JPY V10.1 - POWER TRADE STRATEGY                  |
 //| - MA2 × MA12 Crossover (High Frequency Trading)                   |
 //| - Support/Resistance Detection & Visualization (H1)               |
 //| - Buy/Sell Limit Orders on S/R Levels                            |
@@ -13,7 +13,7 @@
 //+------------------------------------------------------------------+
 
 #property copyright "Yann - La Bête"
-#property version   "10.00"
+#property version   "10.10"
 #property strict
 
 //+------------------------------------------------------------------+
@@ -29,7 +29,7 @@
 input group "=== CONFIGURATION USD/JPY V10 ==="
 input double   RiskPercent = 0.3;            // Risque par trade (%)
 input int      MagicNumber = 777102;         // Magic Number EUR
-input string   TradeComment = "LaBete_JPY_V10"; // Commentaire
+input string   TradeComment = "LaBete_JPY_V10.1"; // Commentaire
 
 input group "=== STRATÉGIE MA2 × MA12 ==="
 input int      MA_Fast = 2;                  // MA rapide (ultra court terme)
