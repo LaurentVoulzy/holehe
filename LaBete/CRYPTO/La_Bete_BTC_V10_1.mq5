@@ -869,13 +869,10 @@ void ManageLimitOrders()
     double pipValue = _Point * 10;
 
     // 1. PROTECTION FTMO : Annuler TOUS les ordres si proche des limites
-    double dailyLoss = MathAbs(todayProfit);
-    double totalDrawdown = MathAbs(startBalance - account.Balance());
-
-    if(dailyLoss >= 1500 || totalDrawdown >= 3000)
+    if(MathAbs(dailyPnL) >= 1500 || MathAbs(totalDrawdown) >= 3000)
     {
         Print("🚨 PROTECTION FTMO : Annulation de TOUS les ordres limites");
-        Print("   Daily Loss: -€", dailyLoss, " | Drawdown: -€", totalDrawdown);
+        Print("   Daily Loss: -€", MathAbs(dailyPnL), " | Drawdown: -€", MathAbs(totalDrawdown));
 
         for(int i = 0; i < 10; i++)
         {
