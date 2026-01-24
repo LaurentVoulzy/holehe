@@ -45,11 +45,15 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
+# Créer le dossier logs s'il n'existe pas
+LOG_DIR = Path(__file__).parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/guardian_crypto.log', encoding='utf-8'),
+        logging.FileHandler(LOG_DIR / 'guardian_crypto.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
