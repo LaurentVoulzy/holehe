@@ -1464,10 +1464,25 @@ void OpenPosition(SignalData &signal)
         Print("✅ Position ouverte avec succès!");
         tradesCountToday++;
 
-        // Envoyer notification Telegram
-        SendTelegramAlert("📈 " + signal.direction + " " + signal.pair + " | Entry: " +
-                         DoubleToString(signal.entry_price, _Digits) + " | Lot: " +
-                         DoubleToString(signal.lot_size, 2));
+        // Notification Telegram STYLÉE
+        string emoji = (signal.direction == "BUY") ? "🟢" : "🔴";
+        string alert = "╔═══════════════════════════════╗\n";
+        alert += "║  🎯 NOUVELLE POSITION OUVERTE  ║\n";
+        alert += "╚═══════════════════════════════╝\n\n";
+        alert += emoji + " *" + signal.direction + " " + signal.pair + "*\n\n";
+        alert += "💰 Entry: `" + DoubleToString(signal.entry_price, _Digits) + "`\n";
+        alert += "🛡️ SL: `" + DoubleToString(signal.sl_price, _Digits) + "` (" + DoubleToString(signal.sl_pips, 1) + " pips)\n";
+        alert += "🎯 TP1: `" + DoubleToString(signal.tp1_price, _Digits) + "` (1:" + DoubleToString(TP1_RR, 1) + ")\n";
+        alert += "🎯 TP2: `" + DoubleToString(signal.tp2_price, _Digits) + "` (1:" + DoubleToString(TP2_RR, 1) + ")\n";
+        alert += "🎯 TP3: `" + DoubleToString(signal.tp3_price, _Digits) + "` (1:" + DoubleToString(TP3_RR, 1) + ")\n\n";
+        alert += "📊 Lot: `" + DoubleToString(signal.lot_size, 2) + "`\n";
+        alert += "📈 Confluence: *" + IntegerToString(signal.confluence_score) + "/100*\n";
+        alert += "🎲 Certitude: *" + IntegerToString(signal.certainty_percent) + "%*\n\n";
+        alert += "💡 " + signal.signal_reason + "\n\n";
+        alert += "━━━━━━━━━━━━━━━━━━━━━━━\n";
+        alert += "✅ Position active - Good luck! 🚀";
+
+        SendTelegramAlert(alert);
     }
     else
     {
