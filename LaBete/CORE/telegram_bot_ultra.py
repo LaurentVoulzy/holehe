@@ -936,6 +936,48 @@ class UltraPropFirmBot:
         )
         await update.message.reply_text(message, parse_mode='Markdown')
 
+    async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/help - Liste complète des commandes"""
+        message = (
+            "📚 *AIDE - COMMANDES DISPONIBLES*\n\n"
+            "*📊 PAR DEVISE (Raccourcis ultra-rapides):*\n"
+            "/eur, /gbp, /jpy, /gold, /btc, /eth\n"
+            "/btc\\_stats - Stats BTC\n"
+            "/btc\\_on - Activer BTC\n"
+            "/btc\\_off - Désactiver BTC\n"
+            "/btc\\_pos - Positions BTC\n"
+            "/btc\\_params - Paramètres BTC\n\n"
+            "*🌍 CONTRÔLE GLOBAL:*\n"
+            "/status - Statut TOUS les bots\n"
+            "/all\\_on - ▶️ Activer TOUT\n"
+            "/all\\_off - ⏸️ Désactiver TOUT\n"
+            "/forex\\_on - ▶️ FOREX seulement\n"
+            "/forex\\_off - ⏸️ FOREX seulement\n"
+            "/crypto\\_on - ▶️ CRYPTO seulement\n"
+            "/crypto\\_off - ⏸️ CRYPTO seulement\n\n"
+            "*💰 FINANCE & P&L:*\n"
+            "/pnl - P&L global\n"
+            "/positions - Positions ouvertes\n"
+            "/daily - Rapport quotidien\n"
+            "/risk - Risque FTMO\n"
+            "/dashboard - Tableau de bord\n\n"
+            "*⚙️ PARAMÈTRES:*\n"
+            "/params - Voir tous\n"
+            "/btc\\_params 70 55 - Modifier\n\n"
+            "*🎯 AVANCÉ:*\n"
+            "/emergency\\_stop - 🚨 ARRÊT TOTAL\n"
+            "/close\\_all - Fermer tout\n"
+            "/close\\_losing - Fermer perdantes\n"
+            "/secure\\_profits - Sécuriser profits\n"
+            "/chart - Graphique P&L\n\n"
+            "*📅 AUTRES:*\n"
+            "/calendar - Calendrier éco\n"
+            "/notify\\_on - Activer notifs\n"
+            "/notify\\_off - Désactiver notifs\n\n"
+            "_Version 10.20 (V10\\_2) - La Bête_"
+        )
+        await update.message.reply_text(message, parse_mode='Markdown')
+
     # ========================================
     # HELPERS
     # ========================================
@@ -1255,6 +1297,7 @@ class UltraPropFirmBot:
 
         # Commande principale
         self.application.add_handler(CommandHandler("start", self.start_command))
+        self.application.add_handler(CommandHandler("help", self.help_command))
 
         # Commandes par devise (menu + stats + on/off + pos + params)
         for cmd_prefix in ['eur', 'gbp', 'jpy', 'gold', 'btc', 'eth']:
@@ -1297,33 +1340,77 @@ class UltraPropFirmBot:
         self.application.add_handler(CallbackQueryHandler(self.button_handler))
 
         logger.info("✅ Bot Telegram Ultra opérationnel!")
-        print("\n╔════════════════════════════════════════╗")
-        print("║   🤖 BOT TELEGRAM ULTRA PROP FIRM     ║")
-        print("║        VERSION V9 - ENHANCED          ║")
-        print("╚════════════════════════════════════════╝")
-        print("\n📱 Ouvrez Telegram et tapez /start")
-        print("\n⚡ COMMANDES RAPIDES DISPONIBLES:")
-        print("\n   📊 PAR DEVISE:")
-        print("   /eur, /gbp, /jpy, /gold, /btc, /eth")
-        print("   /btc_stats, /btc_on, /btc_off, /btc_pos")
-        print("   /btc_params [confluence] [certitude]")
-        print("\n   📈 GLOBAL:")
-        print("   /status, /pnl, /positions, /daily")
-        print("   /all_on, /all_off, /close_all")
-        print("   /forex_on, /forex_off, /crypto_on, /crypto_off")
-        print("\n   ⚙️ PARAMÈTRES:")
-        print("   /params - Voir tous les paramètres")
-        print("   /btc_params 70 55 - Modifier BTC")
-        print("\n   🎯 AVANCÉ:")
-        print("   /dashboard - Tableau de bord FTMO")
-        print("   /emergency_stop - Arrêt d'urgence total")
-        print("   /close_losing - Fermer positions perdantes")
-        print("   /secure_profits - Sécuriser les profits")
-        print("   /chart - Graphique ASCII P&L")
-        print("   /best_setups - Meilleurs setups")
-        print("\n   📅 AUTRES:")
-        print("   /calendar, /risk, /notify_on, /notify_off")
-        print("\n   Tape / dans Telegram pour voir toutes les commandes!\n")
+        print("\n" + "="*70)
+        print("""
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║                🐺  LA BÊTE - BOT TELEGRAM ULTRA  🐺              ║
+║                                                                  ║
+║                  ⚡ VERSION 10.20 (V10_2) ⚡                     ║
+║                                                                  ║
+║              📱 CONTRÔLE TOTAL DE TES 6 BOTS MT5 📱              ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📊 BOTS DISPONIBLES:
+   🇪🇺 EUR/USD  |  🇬🇧 GBP/USD  |  🇯🇵 USD/JPY
+   🥇 XAU/USD   |  ₿ BTC/USD    |  Ξ ETH/USD
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ COMMANDES ULTRA-RAPIDES:
+
+   📊 PAR DEVISE:
+      /eur, /gbp, /jpy, /gold, /btc, /eth
+      /btc_stats      → Stats BTC instantanées
+      /btc_on         → Activer BTC
+      /btc_off        → Désactiver BTC
+      /btc_pos        → Positions BTC
+      /btc_params     → Voir/modifier paramètres BTC
+
+   🌍 CONTRÔLE GLOBAL:
+      /status         → Statut de TOUS les bots
+      /all_on         → ▶️  Activer TOUT
+      /all_off        → ⏸️  Désactiver TOUT
+      /forex_on       → ▶️  Activer FOREX (EUR/GBP/JPY/GOLD)
+      /forex_off      → ⏸️  Désactiver FOREX
+      /crypto_on      → ▶️  Activer CRYPTO (BTC/ETH)
+      /crypto_off     → ⏸️  Désactiver CRYPTO
+
+   💰 FINANCE & P&L:
+      /pnl            → P&L global en temps réel
+      /positions      → Toutes les positions ouvertes
+      /daily          → Rapport quotidien
+      /risk           → Statut risque FTMO 40K
+      /dashboard      → 📊 Tableau de bord FTMO complet
+
+   ⚙️ PARAMÈTRES (Confluence/Certitude):
+      /params                → Voir TOUS les paramètres
+      /btc_params 70 55      → Modifier BTC (Confluence 70, Certitude 55%)
+      /eur_params 85 50      → Modifier EUR
+
+   🎯 COMMANDES AVANCÉES:
+      /emergency_stop        → 🚨 ARRÊT TOTAL (ferme tout + désactive)
+      /close_all             → ⚠️  Fermer TOUTES les positions
+      /close_losing          → 📉 Fermer uniquement positions perdantes
+      /secure_profits        → 💰 Sécuriser les positions gagnantes
+      /chart                 → 📈 Graphique ASCII P&L
+      /best_setups           → 🎯 Meilleurs setups récents
+
+   📅 CALENDRIER & ALERTES:
+      /calendar              → Calendrier économique du jour
+      /notify_on             → 🔔 Activer notifications push
+      /notify_off            → 🔕 Désactiver notifications
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 ASTUCE: Tape / dans Telegram pour voir TOUTES les commandes!
+
+🚀 DÉMARRAGE: Ouvre Telegram et tape /start
+
+""")
+        print("="*70 + "\n")
+        print("✅ Bot Telegram opérationnel - En attente de connexions...\n")
 
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
