@@ -1542,6 +1542,21 @@ void ManageOpenPositions()
                         {
                             BE_Activated = true;
                             Print("🛡️ BREAK EVEN activé @ ", newSL, " (", percentToTP1, "% vers TP1)");
+
+// Notification Telegram Break Even
+                            string beAlert = "🛡️ *BREAK EVEN ACTIVÉ*
+
+";
+                            beAlert += "Position sécurisée à BE!
+";
+                            beAlert += "SL déplacé: `" + DoubleToString(newSL, _Digits) + "`
+
+";
+                            beAlert += "📊 Progression: " + DoubleToString(percentToTP1, 1) + "% vers TP1
+";
+                            beAlert += "✅ Plus de risque - Trade protégé!";
+                            SendTelegramAlert(beAlert);
+                        }
                         }
                     }
                 }
@@ -1557,6 +1572,33 @@ void ManageOpenPositions()
                         ClosePartialPosition(position.Ticket(), TP3_ClosePercent);
                         TP3_Hit = true;
                         Print("🎯 TP3 ATTEINT! (1:", TP3_RR, ") → Fermé ", TP3_ClosePercent, "%");
+
+// Notification Telegram TP3 - MEGA WIN!
+                        string tp3Alert = "╔═══════════════════════════════╗
+";
+                        tp3Alert += "║  🚀 TP3 ATTEINT - MEGA WIN! 🚀 ║
+";
+                        tp3Alert += "╚═══════════════════════════════╝
+
+";
+                        tp3Alert += "🎉🎉🎉 *FÉLICITATIONS!* 🎉🎉🎉
+
+";
+                        tp3Alert += "💰 Take Profit 3 touché!
+";
+                        tp3Alert += "📊 Ratio: *1:" + DoubleToString(TP3_RR, 1) + "*
+";
+                        tp3Alert += "✅ Fermé " + DoubleToString(TP3_ClosePercent, 0) + "% de la position
+
+";
+                        tp3Alert += "███████████████████ 100%
+
+";
+                        tp3Alert += "🏆 TRADE PARFAIT - GG!
+";
+                        tp3Alert += "💎 Maximum profit sécurisé! 💎";
+                        SendTelegramAlert(tp3Alert);
+                    }
                     }
                 }
 
@@ -1569,6 +1611,33 @@ void ManageOpenPositions()
                         ClosePartialPosition(position.Ticket(), TP2_ClosePercent);
                         TP2_Hit = true;
                         Print("🎯 TP2 ATTEINT! (1:", TP2_RR, ") → Fermé ", TP2_ClosePercent, "%");
+
+// Notification Telegram TP2 - EXCELLENT!
+                        string tp2Alert = "╔═══════════════════════════════╗
+";
+                        tp2Alert += "║   🎯 TP2 ATTEINT - EXCELLENT!  ║
+";
+                        tp2Alert += "╚═══════════════════════════════╝
+
+";
+                        tp2Alert += "🎊 *SUPER TRADE!* 🎊
+
+";
+                        tp2Alert += "💰 Take Profit 2 touché!
+";
+                        tp2Alert += "📊 Ratio: *1:" + DoubleToString(TP2_RR, 1) + "*
+";
+                        tp2Alert += "✅ Fermé " + DoubleToString(TP2_ClosePercent, 0) + "% de la position
+
+";
+                        tp2Alert += "█████████████░░░░░░ 70%
+
+";
+                        tp2Alert += "📈 Reste 20% pour TP3!
+";
+                        tp2Alert += "🚀 Let it run! 💰";
+                        SendTelegramAlert(tp2Alert);
+                    }
                     }
                 }
 
@@ -1581,6 +1650,41 @@ void ManageOpenPositions()
                         ClosePartialPosition(position.Ticket(), TP1_ClosePercent);
                         TP1_Hit = true;
                         Print("🎯 TP1 ATTEINT! (1:", TP1_RR, ") → Fermé ", TP1_ClosePercent, "%");
+
+// Notification Telegram TP1 - NICE!
+                        string tp1Alert = "╔═══════════════════════════════╗
+";
+                        tp1Alert += "║    💰 TP1 ATTEINT - NICE! 💰   ║
+";
+                        tp1Alert += "╚═══════════════════════════════╝
+
+";
+                        tp1Alert += "✅ *PREMIER TAKE PROFIT!* ✅
+
+";
+                        tp1Alert += "🎯 Take Profit 1 touché!
+";
+                        tp1Alert += "📊 Ratio: *1:" + DoubleToString(TP1_RR, 1) + "*
+";
+                        tp1Alert += "✅ Fermé " + DoubleToString(TP1_ClosePercent, 0) + "% de la position
+
+";
+                        tp1Alert += "██████░░░░░░░░░░░░░ 30%
+
+";
+                        tp1Alert += "📈 Reste 70% en course!
+";
+                        tp1Alert += "🎯 Objectif TP2 & TP3!
+";
+                        if(TrailingAfterTP1)
+                            tp1Alert += "🔄 Trailing activé - Let's go! 🚀";
+                        SendTelegramAlert(tp1Alert);
+
+                        // Activer trailing après TP1
+                        if(TrailingAfterTP1)
+                        {
+                            Trailing_Active = true;
+                            Print("🔄 TRAILING activé après TP1");
 
                         // Activer trailing après TP1
                         if(TrailingAfterTP1)
