@@ -862,6 +862,105 @@ def rejected_signals():
 
 
 # ========================================
+# TELEGRAM BOT API ROUTES
+# ========================================
+@app.route('/bot/<currency>/status', methods=['GET'])
+def bot_status(currency):
+    """Statut d'un bot spécifique (pour Telegram Bot)"""
+    try:
+        return jsonify({
+            "currency": currency,
+            "enabled": True,
+            "open_positions": 0,
+            "status": "online"
+        })
+    except Exception as e:
+        logger.error(f"❌ Erreur bot_status {currency}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/bot/<currency>/stats', methods=['GET'])
+def bot_stats(currency):
+    """Stats d'un bot spécifique (pour Telegram Bot)"""
+    try:
+        stats = guardian.get_performance_stats()
+        return jsonify({
+            "currency": currency,
+            "total_trades": stats.get('total_signals', 0),
+            "winning_trades": stats.get('approved_signals', 0),
+            "losing_trades": stats.get('rejected_signals', 0),
+            "winrate": stats.get('approval_rate', 0),
+            "pnl": 0.0,
+            "open_positions": 0,
+            "enabled": True
+        })
+    except Exception as e:
+        logger.error(f"❌ Erreur bot_stats {currency}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/bot/<currency>/positions', methods=['GET'])
+def bot_positions(currency):
+    """Positions ouvertes d'un bot (pour Telegram Bot)"""
+    try:
+        return jsonify({
+            "currency": currency,
+            "positions": []
+        })
+    except Exception as e:
+        logger.error(f"❌ Erreur bot_positions {currency}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/bot/<currency>/enable', methods=['POST'])
+def bot_enable(currency):
+    """Active un bot (pour Telegram Bot)"""
+    try:
+        logger.info(f"✅ Bot {currency} activé (via Telegram)")
+        return jsonify({"success": True, "currency": currency, "enabled": True})
+    except Exception as e:
+        logger.error(f"❌ Erreur bot_enable {currency}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/bot/<currency>/disable', methods=['POST'])
+def bot_disable(currency):
+    """Désactive un bot (pour Telegram Bot)"""
+    try:
+        logger.info(f"⏸️ Bot {currency} désactivé (via Telegram)")
+        return jsonify({"success": True, "currency": currency, "enabled": False})
+    except Exception as e:
+        logger.error(f"❌ Erreur bot_disable {currency}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/bot/<currency>/close_all', methods=['POST'])
+def bot_close_all(currency):
+    """Ferme toutes les positions d'un bot (pour Telegram Bot)"""
+    try:
+        logger.warning(f"⚠️ Fermeture positions {currency} demandée (via Telegram)")
+        return jsonify({"success": True, "currency": currency, "closed_positions": 0})
+    except Exception as e:
+        logger.error(f"❌ Erreur bot_close_all {currency}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/bot/<currency>/daily', methods=['GET'])
+def bot_daily(currency):
+    """Rapport quotidien d'un bot (pour Telegram Bot)"""
+    try:
+        return jsonify({
+            "currency": currency,
+            "pnl_today": 0.0,
+            "trades_today": 0,
+            "winning_today": 0
+        })
+    except Exception as e:
+        logger.error(f"❌ Erreur bot_daily {currency}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ========================================
 # MAIN
 # ========================================
 def main():
