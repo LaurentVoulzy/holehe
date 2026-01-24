@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-LA BÊTE - BOT TELEGRAM ULTRA PROP FIRM
+LA BÊTE - BOT TELEGRAM ULTRA PROP FIRM V10_2
 Version améliorée avec toutes les commandes rapides + notifications push
 """
+
+VERSION = "10.20"  # V10_2 - Test synchronisation GitHub
 
 import sys
 import logging
@@ -158,6 +160,7 @@ class UltraPropFirmBot:
         message = (
             "╔══════════════════════════════════════╗\n"
             "║   🐺 LA BÊTE - ULTRA PROP FIRM     ║\n"
+            "║        Version 10.20 (V10_2)        ║\n"
             "╚══════════════════════════════════════╝\n\n"
             "📱 *CONTRÔLE TOTAL PAR DEVISE*\n\n"
             "✅ Notifications push temps réel\n"
@@ -165,7 +168,7 @@ class UltraPropFirmBot:
             "✅ Statistiques avancées\n"
             "✅ Gestion risque FTMO\n"
             "✅ Alertes intelligentes\n\n"
-            "_Système optimisé FTMO 40K - Version Ultra_"
+            f"_Système optimisé FTMO 40K - Version {VERSION}_"
         )
 
         await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='Markdown')
