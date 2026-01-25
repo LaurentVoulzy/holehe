@@ -391,6 +391,12 @@ int OnInit()
     Print("💎 Qualité > Quantité - Win rate cible: 55-65%");
     Print("╚══════════════════════════════════════════════════════════╝");
 
+    // Notification Telegram démarrage
+    if(EnableTelegramNotifications)
+    {
+        NotifyBotStarted(_Symbol, "La Bete GBP V12", "12.00");
+    }
+
     return(INIT_SUCCEEDED);
 }
 
@@ -1528,7 +1534,15 @@ void OpenPosition(SignalData &signal)
         Print("✅ Position ouverte avec succès!");
         tradesCountToday++;
 
-        // Notification Telegram STYLÉE
+        // Notification Telegram direct
+        if(EnableTelegramNotifications)
+        {
+            ENUM_ORDER_TYPE orderType = (signal.direction == "BUY") ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+            NotifyPositionOpened(_Symbol, orderType, signal.lot_size, signal.entry_price,
+                                signal.sl_price, signal.tp1_price, "MA20×MA50 + VWAP");
+        }
+
+        // Notification Guardian (si configuré)
         string emoji = (signal.direction == "BUY") ? "🟢" : "🔴";
         string alert = "╔═══════════════════════════════╗\n";
         alert += "║  🎯 NOUVELLE POSITION OUVERTE  ║\n";
