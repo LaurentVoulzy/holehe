@@ -34,8 +34,8 @@ input string   TradeComment = "LaBete_EUR_V10_1"; // Commentaire
 input group "=== STRATÉGIE MA2 × MA12 ==="
 input int      MA_Fast = 2;                  // MA rapide (ultra court terme)
 input int      MA_Slow = 12;                 // MA lente (court terme)
-input int      MinConfluenceScore = 35;      // Score confluence minimum (/100)
-input int      MinCertaintyPercent = 30;     // Certitude minimum (%)
+input int      MinConfluenceScore = 85;      // Score confluence minimum (/100) - ULTRA SÉLECTIF
+input int      MinCertaintyPercent = 80;     // Certitude minimum (%) - HAUTE QUALITÉ
 
 input group "=== STOP LOSS / TAKE PROFIT (ATR) ==="
 input int      SL_MinPips = 30;              // SL minimum EUR (pips)
@@ -70,7 +70,7 @@ input color    SupportColor = clrLime;       // Couleur Support
 input color    ResistanceColor = clrRed;     // Couleur Résistance
 
 input group "=== ORDRES LIMITES SUR S/R ==="
-input bool     UseLimitOrders = true;        // Activer Buy/Sell Limit sur S/R
+input bool     UseLimitOrders = false;       // Activer Buy/Sell Limit sur S/R - DÉSACTIVÉ (trop agressif)
 input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
 input double   LimitOrderOffset = 15.0;      // Distance du S/R (pips) - marché respire
 input double   LimitSL_ATR_Multiplier = 1.5; // SL = ATR H1 × 1.5 (dynamique)
@@ -94,7 +94,7 @@ input double   MaxDailyLoss = 2000;          // Limite daily loss (€)
 input double   MaxDrawdown = 4000;           // Limite drawdown total (€)
 input double   AlertDailyLoss = 1700;        // Alerte à 1700€
 input double   AlertDrawdown = 3500;         // Alerte à 3500€
-input int      MaxTradesPerDay = 20;         // Limite trades/jour
+input int      MaxTradesPerDay = 2;          // Limite trades/jour - MAX 2 TRADES (qualité > quantité)
 
 //+------------------------------------------------------------------+
 //| VARIABLES GLOBALES                                                |
