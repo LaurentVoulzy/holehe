@@ -98,6 +98,11 @@ input double   AlertDailyLoss = 1700;        // Alerte à 1700€
 input double   AlertDrawdown = 3500;         // Alerte à 3500€
 input int      MaxTradesPerDay = 2;          // Limite trades/jour - MAX 2 TRADES (qualité > quantité)
 
+input group "=== NOTIFICATIONS TELEGRAM ==="
+input string   TelegramBotToken = "";           // Token du bot Telegram
+input string   TelegramChatID = "";             // Chat ID Telegram
+input bool     EnableTelegramNotifications = false; // Activer notifications Telegram
+
 //+------------------------------------------------------------------+
 //| VARIABLES GLOBALES                                                |
 //+------------------------------------------------------------------+

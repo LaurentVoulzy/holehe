@@ -98,6 +98,11 @@ input double   AlertDailyLoss = 1700;        // Alerte à 1700€
 input double   AlertDrawdown = 3500;         // Alerte à 3500€
 input int      MaxTradesPerDay = 2;          // Limite trades/jour - MAX 2 TRADES (qualité > quantité)
 
+input group "=== NOTIFICATIONS TELEGRAM ==="
+input string   TelegramBotToken = "";           // Token du bot Telegram
+input string   TelegramChatID = "";             // Chat ID Telegram
+input bool     EnableTelegramNotifications = false; // Activer notifications Telegram
+
 //+------------------------------------------------------------------+
 //| VARIABLES GLOBALES                                                |
 //+------------------------------------------------------------------+
@@ -385,6 +390,12 @@ int OnInit()
     Print("📰 News: ", (CheckEconomicNews ? "✅ ACTIVÉ" : "❌ OFF (Crypto 24/7)"));
     Print("💎 Qualité > Quantité - Win rate cible: 55-65%");
     Print("╚══════════════════════════════════════════════════════════╝");
+
+    // Notification Telegram démarrage
+    if(EnableTelegramNotifications)
+    {
+        NotifyBotStarted(_Symbol, "La Bete EUR V12", "12.00");
+    }
 
     return(INIT_SUCCEEDED);
 }
@@ -1523,7 +1534,15 @@ void OpenPosition(SignalData &signal)
         Print("✅ Position ouverte avec succès!");
         tradesCountToday++;
 
-        // Notification Telegram STYLÉE
+        // Notification Telegram direct
+        if(EnableTelegramNotifications)
+        {
+            ENUM_ORDER_TYPE orderType = (signal.direction == "BUY") ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+            NotifyPositionOpened(_Symbol, orderType, signal.lot_size, signal.entry_price,
+                                signal.sl_price, signal.tp1_price, "MA20×MA50 + VWAP");
+        }
+
+        // Notification Guardian (si configuré)
         string emoji = (signal.direction == "BUY") ? "🟢" : "🔴";
         string alert = "╔═══════════════════════════════╗\n";
         alert += "║  🎯 NOUVELLE POSITION OUVERTE  ║\n";
