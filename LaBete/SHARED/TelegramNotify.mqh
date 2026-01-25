@@ -32,12 +32,12 @@ bool SendTelegramMessage(string message)
 
     char post[];
     char result[];
-    string headers;
+    string headers = "Content-Type: application/x-www-form-urlencoded\r\n";
 
     ArrayResize(post, StringToCharArray(params, post, 0, WHOLE_ARRAY) - 1);
 
     int timeout = 5000; // 5 secondes
-    int res = WebRequest("POST", url, "", NULL, timeout, post, 0, result, headers);
+    int res = WebRequest("POST", url, headers, NULL, timeout, post, 0, result, headers);
 
     if(res == -1)
     {
