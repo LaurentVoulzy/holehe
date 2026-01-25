@@ -27,8 +27,8 @@
 //| PARAMÈTRES INPUTS                                                 |
 //+------------------------------------------------------------------+
 input group "=== CONFIGURATION XAU/USD (GOLD) V12 ==="
-input double   RiskPercent = 0.25;            // Risque par trade (%)
-input int      MagicNumber = 777400;         // Magic Number EUR
+input double   RiskPercent = 0.2;            // Risque par trade (%) - GOLD très volatil
+input int      MagicNumber = 777400;         // Magic Number GOLD
 input string   TradeComment = "LaBete_GOLD_V12"; // Commentaire
 
 input group "=== STRATÉGIE MA20 × MA50 ==="
@@ -38,9 +38,9 @@ input int      MinConfluenceScore = 85;      // Score confluence minimum (/100) 
 input int      MinCertaintyPercent = 80;     // Certitude minimum (%) - HAUTE QUALITÉ
 
 input group "=== STOP LOSS / TAKE PROFIT (ATR) ==="
-input int      SL_MinPips = 30;              // SL minimum EUR (pips)
-input int      SL_MaxPips = 100;             // SL maximum EUR (pips)
-input double   ATR_Multiplier_SL = 2.0;      // ATR × 2.0 pour EUR
+input int      SL_MinPips = 100;              // SL minimum GOLD (pips) - Volatilité TRÈS HAUTE
+input int      SL_MaxPips = 300;             // SL maximum GOLD (pips)
+input double   ATR_Multiplier_SL = 2.5;      // ATR × 2.5 pour GOLD - Plus de marge
 input double   TP1_RR = 2.0;                 // TP1 Risk:Reward 1:2
 input double   TP2_RR = 3.0;                 // TP2 Risk:Reward 1:3
 input double   TP3_RR = 5.0;                 // TP3 Risk:Reward 1:5
@@ -52,7 +52,7 @@ input double   TP3_ClosePercent = 20.0;      // Fermer 20% à TP3
 
 input group "=== BREAK EVEN & TRAILING ==="
 input double   BE_ActivationPercent = 50.0;  // Activation BE (50% vers TP1)
-input int      BE_OffsetPips = 10;           // Offset BE (pips)
+input int      BE_OffsetPips = 20;           // Offset BE (pips) - GOLD très volatil
 input bool     TrailingAfterTP1 = true;      // Activer trailing après TP1
 input double   Trailing_ATR_Multiplier = 0.5; // Trailing = ATR × 0.5
 
@@ -73,10 +73,10 @@ input bool     UseLimitOrders = false;       // Activer Buy/Sell Limit sur S/R -
 input bool     ShowSR = false;               // Afficher S/R sur graphique
 input int      SR_Lookback = 100;            // Barres pour détection S/R
 input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
-input double   LimitOrderOffset = 15.0;      // Distance du S/R (pips) - marché respire
+input double   LimitOrderOffset = 30.0;      // Distance du S/R (pips) - GOLD volatil
 input double   LimitSL_ATR_Multiplier = 1.5; // SL = ATR H1 × 1.5 (dynamique)
-input double   LimitSL_MinPips = 30.0;       // SL minimum (pips)
-input double   LimitSL_MaxPips = 70.0;       // SL maximum (pips)
+input double   LimitSL_MinPips = 100.0;       // SL minimum (pips) - GOLD
+input double   LimitSL_MaxPips = 200.0;       // SL maximum (pips) - GOLD
 input double   LimitTP_RR = 3.0;             // TP = SL × 3.0 pour ordres limites
 input int      LimitOrderExpiry = 240;       // Expiration ordres (min, 0=jamais)
 

@@ -38,9 +38,9 @@ input int      MinConfluenceScore = 85;      // Score confluence minimum (/100) 
 input int      MinCertaintyPercent = 80;     // Certitude minimum (%) - HAUTE QUALITÉ
 
 input group "=== STOP LOSS / TAKE PROFIT (ATR) ==="
-input int      SL_MinPips = 30;              // SL minimum EUR (pips)
-input int      SL_MaxPips = 100;             // SL maximum EUR (pips)
-input double   ATR_Multiplier_SL = 2.0;      // ATR × 2.0 pour EUR
+input int      SL_MinPips = 40;              // SL minimum GBP (pips) - Volatilité moyenne-haute
+input int      SL_MaxPips = 130;             // SL maximum GBP (pips)
+input double   ATR_Multiplier_SL = 2.0;      // ATR × 2.0 pour GBP
 input double   TP1_RR = 2.0;                 // TP1 Risk:Reward 1:2
 input double   TP2_RR = 3.0;                 // TP2 Risk:Reward 1:3
 input double   TP3_RR = 5.0;                 // TP3 Risk:Reward 1:5
@@ -52,7 +52,7 @@ input double   TP3_ClosePercent = 20.0;      // Fermer 20% à TP3
 
 input group "=== BREAK EVEN & TRAILING ==="
 input double   BE_ActivationPercent = 50.0;  // Activation BE (50% vers TP1)
-input int      BE_OffsetPips = 10;           // Offset BE (pips)
+input int      BE_OffsetPips = 15;           // Offset BE (pips) - GBP plus volatil
 input bool     TrailingAfterTP1 = true;      // Activer trailing après TP1
 input double   Trailing_ATR_Multiplier = 0.5; // Trailing = ATR × 0.5
 
@@ -73,10 +73,10 @@ input bool     UseLimitOrders = false;       // Activer Buy/Sell Limit sur S/R -
 input bool     ShowSR = false;               // Afficher S/R sur graphique
 input int      SR_Lookback = 100;            // Barres pour détection S/R
 input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
-input double   LimitOrderOffset = 15.0;      // Distance du S/R (pips) - marché respire
+input double   LimitOrderOffset = 20.0;      // Distance du S/R (pips) - GBP volatil
 input double   LimitSL_ATR_Multiplier = 1.5; // SL = ATR H1 × 1.5 (dynamique)
-input double   LimitSL_MinPips = 30.0;       // SL minimum (pips)
-input double   LimitSL_MaxPips = 70.0;       // SL maximum (pips)
+input double   LimitSL_MinPips = 40.0;       // SL minimum (pips) - GBP
+input double   LimitSL_MaxPips = 90.0;       // SL maximum (pips) - GBP
 input double   LimitTP_RR = 3.0;             // TP = SL × 3.0 pour ordres limites
 input int      LimitOrderExpiry = 240;       // Expiration ordres (min, 0=jamais)
 
