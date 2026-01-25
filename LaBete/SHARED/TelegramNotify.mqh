@@ -85,12 +85,12 @@ void NotifyPositionOpened(string symbol, ENUM_ORDER_TYPE type, double lots, doub
 //+------------------------------------------------------------------+
 //| Notification de fermeture de position                            |
 //+------------------------------------------------------------------+
-void NotifyPositionClosed(string symbol, ENUM_POSITION_TYPE type, double lots, double openPrice, double closePrice, double profit, string reason)
+void NotifyPositionClosed(string symbol, long positionType, double lots, double openPrice, double closePrice, double profit, string reason)
 {
     if(!EnableTelegramNotifications) return;
 
     string emoji = (profit > 0) ? "✅" : (profit < 0) ? "❌" : "⚪";
-    string direction = (type == POSITION_TYPE_BUY) ? "BUY" : "SELL";
+    string direction = (positionType == POSITION_TYPE_BUY) ? "BUY" : "SELL";
     string profitEmoji = (profit > 0) ? "💚" : (profit < 0) ? "💔" : "⚪";
 
     string message = emoji + " <b>POSITION FERMÉE</b>\n\n";
