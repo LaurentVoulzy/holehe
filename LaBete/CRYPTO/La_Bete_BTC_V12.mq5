@@ -22,6 +22,7 @@
 #include <Trade\Trade.mqh>
 #include <Trade\PositionInfo.mqh>
 #include <Trade\AccountInfo.mqh>
+#include "../SHARED/TelegramNotify.mqh"
 
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
@@ -96,6 +97,11 @@ input double   MaxDrawdown = 4000;           // Limite drawdown total (€)
 input double   AlertDailyLoss = 1700;        // Alerte à 1700€
 input double   AlertDrawdown = 3500;         // Alerte à 3500€
 input int      MaxTradesPerDay = 2;          // Limite trades/jour - MAX 2 TRADES (qualité > quantité)
+
+input group "=== NOTIFICATIONS TELEGRAM ==="
+input string   TelegramBotToken = "";           // Token du bot Telegram
+input string   TelegramChatID = "";             // Chat ID Telegram
+input bool     EnableTelegramNotifications = false; // Activer notifications Telegram
 
 //+------------------------------------------------------------------+
 //| VARIABLES GLOBALES                                                |
@@ -383,6 +389,12 @@ int OnInit()
     Print("📰 News: ", (CheckEconomicNews ? "✅ ACTIVÉ" : "❌ OFF (Crypto 24/7)"));
     Print("💎 Qualité > Quantité - Win rate cible: 55-65%");
     Print("╚══════════════════════════════════════════════════════════╝");
+
+    // Notification Telegram démarrage
+    if(EnableTelegramNotifications)
+    {
+        NotifyBotStarted(_Symbol, "La Bete BTC V12", "12.00");
+    }
 
     return(INIT_SUCCEEDED);
 }
@@ -1523,7 +1535,15 @@ void OpenPosition(SignalData &signal)
         Print("✅ Position ouverte avec succès!");
         tradesCountToday++;
 
-        // Notification Telegram STYLÉE
+        // Notification Telegram direct
+        if(EnableTelegramNotifications)
+        {
+            ENUM_ORDER_TYPE orderType = (signal.direction == "BUY") ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+            NotifyPositionOpened(_Symbol, orderType, signal.lot_size, signal.entry_price,
+                                signal.sl_price, signal.tp1_price, "MA20×MA50 + VWAP");
+        }
+
+        // Notification Guardian (si configuré)
         string emoji = (signal.direction == "BUY") ? "🟢" : "🔴";
         string alert = "╔═══════════════════════════════╗\n";
         alert += "║  🎯 NOUVELLE POSITION OUVERTE  ║\n";
@@ -1637,6 +1657,14 @@ void ManageOpenPositions()
                         tp3Alert += "🏆 TRADE PARFAIT - GG!\n";
                         tp3Alert += "💎 Maximum profit sécurisé! 💎";
                         SendTelegramAlert(tp3Alert);
+
+                        // Notification Telegram direct TP3
+                        if(EnableTelegramNotifications)
+                        {
+                            double profit = position.Profit();
+                            NotifyPositionClosed(_Symbol, position.Type(), position.Volume(),
+                                                position.PriceOpen(), currentPrice, profit, "TP3 (20%) - PERFECT!");
+                        }
                     }
                 }
 
@@ -1662,6 +1690,14 @@ void ManageOpenPositions()
                         tp2Alert += "📈 Reste 20% pour TP3!\n";
                         tp2Alert += "🚀 Let it run! 💰";
                         SendTelegramAlert(tp2Alert);
+
+                        // Notification Telegram direct TP2
+                        if(EnableTelegramNotifications)
+                        {
+                            double profit = position.Profit();
+                            NotifyPositionClosed(_Symbol, position.Type(), position.Volume(),
+                                                position.PriceOpen(), currentPrice, profit, "TP2 (30%)");
+                        }
                     }
                 }
 
@@ -1689,6 +1725,14 @@ void ManageOpenPositions()
                         if(TrailingAfterTP1)
                             tp1Alert += "🔄 Trailing activé - Let's go! 🚀";
                         SendTelegramAlert(tp1Alert);
+
+                        // Notification Telegram direct TP1
+                        if(EnableTelegramNotifications)
+                        {
+                            double profit = position.Profit();
+                            NotifyPositionClosed(_Symbol, position.Type(), position.Volume(),
+                                                position.PriceOpen(), currentPrice, profit, "TP1 (50%)");
+                        }
 
                         // Activer trailing après TP1
                         if(TrailingAfterTP1)
