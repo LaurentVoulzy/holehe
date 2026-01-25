@@ -7,11 +7,9 @@
 #property strict
 
 //+------------------------------------------------------------------+
-//| Variables globales Telegram                                      |
+//| NOTE: Les variables TelegramBotToken, TelegramChatID et         |
+//| EnableTelegramNotifications sont déclarées dans chaque bot      |
 //+------------------------------------------------------------------+
-input string TelegramBotToken = "";           // Token du bot Telegram
-input string TelegramChatID = "";             // Chat ID Telegram
-input bool   EnableTelegramNotifications = false; // Activer notifications Telegram
 
 //+------------------------------------------------------------------+
 //| Envoie un message Telegram                                       |
@@ -87,12 +85,12 @@ void NotifyPositionOpened(string symbol, ENUM_ORDER_TYPE type, double lots, doub
 //+------------------------------------------------------------------+
 //| Notification de fermeture de position                            |
 //+------------------------------------------------------------------+
-void NotifyPositionClosed(string symbol, ENUM_ORDER_TYPE type, double lots, double openPrice, double closePrice, double profit, string reason)
+void NotifyPositionClosed(string symbol, ENUM_POSITION_TYPE type, double lots, double openPrice, double closePrice, double profit, string reason)
 {
     if(!EnableTelegramNotifications) return;
 
     string emoji = (profit > 0) ? "✅" : (profit < 0) ? "❌" : "⚪";
-    string direction = (type == ORDER_TYPE_BUY) ? "BUY" : "SELL";
+    string direction = (type == POSITION_TYPE_BUY) ? "BUY" : "SELL";
     string profitEmoji = (profit > 0) ? "💚" : (profit < 0) ? "💔" : "⚪";
 
     string message = emoji + " <b>POSITION FERMÉE</b>\n\n";
