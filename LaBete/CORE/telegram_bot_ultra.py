@@ -160,7 +160,7 @@ class UltraPropFirmBot:
         message = (
             "╔══════════════════════════════════════╗\n"
             "║   🐺 LA BÊTE - ULTRA PROP FIRM     ║\n"
-            "║        Version 10.20 (V10_2)        ║\n"
+            "║        Version 12.0 (V12)        ║\n"
             "╚══════════════════════════════════════╝\n\n"
             "📱 *CONTRÔLE TOTAL PAR DEVISE*\n\n"
             "✅ Notifications push temps réel\n"
@@ -1409,7 +1409,7 @@ class UltraPropFirmBot:
 ║                                                                  ║
 ║                🐺  LA BÊTE - BOT TELEGRAM ULTRA  🐺              ║
 ║                                                                  ║
-║                  ⚡ VERSION 10.20 (V10_2) ⚡                     ║
+║                  ⚡ VERSION 12.0 (V12) ⚡                     ║
 ║                                                                  ║
 ║              📱 CONTRÔLE TOTAL DE TES 6 BOTS MT5 📱              ║
 ║                                                                  ║

@@ -14,7 +14,7 @@
    - Support/Résistance basés sur **VOLUME** (pas juste prix)
    - VWAP H1 avec bandes Standard Deviation (±1σ, ±2σ)
    - Zones institutionnelles = vraie liquidité
-   - **Nouveau:** Indicateur VWAP.mq5 custom créé
+   - **Nouveau:** Indicateur VWAP_V12.mq5 custom créé
 
 3. **Timeframe Recommandé: M30**
    - Stratégie: MA20×MA50 sur **M30**
@@ -34,7 +34,7 @@
 ✅ `CRYPTO/La_Bete_ETH_V12.mq5`
 
 ### **Nouvel Indicateur:**
-✅ `SHARED/VWAP.mq5` - Indicateur VWAP Daily avec bandes SD
+✅ `SHARED/VWAP_V12.mq5` - Indicateur VWAP Daily avec bandes SD
 
 ### **Telegram Bot:**
 ✅ `CORE/telegram_bot_ultra.py` - Version 12.0
@@ -93,8 +93,8 @@ git pull origin claude/create-bot-6rxu1
 ```
 1. Ouvrir MetaEditor (MT5)
 2. Naviguer: File → Open Data Folder
-3. Copier VWAP.mq5 dans: MQL5/Indicators/
-4. Compiler VWAP.mq5 (F7)
+3. Copier VWAP_V12.mq5 dans: MQL5/Indicators/
+4. Compiler VWAP_V12.mq5 (F7)
 5. Vérifier: Aucune erreur
 ```
 
@@ -104,7 +104,7 @@ git pull origin claude/create-bot-6rxu1
 2. Compiler (F7)
 3. Vérifier: Aucune erreur
 4. Si erreur "VWAP not found":
-   → Vérifier que VWAP.mq5 est compilé dans Indicators/
+   → Vérifier que VWAP_V12.mq5 est compilé dans Indicators/
 ```
 
 ### **4. Attacher les bots:**
@@ -146,7 +146,7 @@ Logs attendus:
 
 Si erreur:
 ❌ "Impossible d'initialiser VWAP"
-→ Indicateur VWAP.mq5 pas compilé correctement
+→ Indicateur VWAP_V12.mq5 pas compilé correctement
 ```
 
 ---
@@ -223,7 +223,7 @@ Si erreur:
 ## 📞 SUPPORT
 
 En cas de problème:
-1. Vérifier VWAP.mq5 compilé
+1. Vérifier VWAP_V12.mq5 compilé
 2. Vérifier graphique H1 avec VWAP ouvert
 3. Vérifier graphique M30 avec bot V12
 4. Consulter logs MT5 (Experts tab)

@@ -301,7 +301,7 @@ int OnInit()
     handleATR = iATR(_Symbol, PERIOD_CURRENT, ATR_Period);
 
     // V12: Initialiser VWAP sur H1 pour S/R
-    handleVWAP_H1 = iCustom(_Symbol, PERIOD_H1, "VWAP");
+    handleVWAP_H1 = iCustom(_Symbol, PERIOD_H1, "VWAP_V12");
 
     // Vérifier les handles
     if(handleMA_Fast == INVALID_HANDLE || handleMA_Slow == INVALID_HANDLE ||
@@ -309,7 +309,7 @@ int OnInit()
        handleVWAP_H1 == INVALID_HANDLE)
     {
         Print("❌ ERREUR: Impossible d'initialiser les indicateurs!");
-        Print("⚠️ Assurez-vous que VWAP.mq5 est compilé et dans le dossier Indicators!");
+        Print("⚠️ Assurez-vous que VWAP_V12.mq5 est compilé et dans le dossier Indicators!");
         return(INIT_FAILED);
     }
 
@@ -653,7 +653,7 @@ void ReadVWAPZones()
 //+------------------------------------------------------------------+
 void DisplayVWAPZones()
 {
-    // V12: Le VWAP est affiché automatiquement par l'indicateur VWAP.mq5
+    // V12: Le VWAP est affiché automatiquement par l'indicateur VWAP_V12.mq5
     // Cette fonction n'est conservée que pour compatibilité
     // Les zones VWAP (±1σ, ±2σ) sont automatiquement tracées sur le graphique H1
 

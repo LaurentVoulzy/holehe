@@ -1,8 +1,8 @@
 //+------------------------------------------------------------------+
-//|                                                       VWAP.mq5    |
+//|                                                  VWAP_V12.mq5     |
 //|                                    Copyright 2025, Yann - La Bête |
 //|                                                                    |
-//| VWAP (Volume Weighted Average Price) avec Bandes Standard Deviation|
+//| VWAP V12 (Volume Weighted Average Price) avec Bandes SD          |
 //| - VWAP Daily (reset chaque jour à 00:00)                         |
 //| - Bandes ±1σ, ±2σ (Support/Résistance basés sur volume)         |
 //| - Utilisé par La Bête V12 pour détecter zones institutionnelles  |
@@ -10,7 +10,7 @@
 
 #property copyright "Yann - La Bête"
 #property link      ""
-#property version   "1.00"
+#property version   "12.00"
 #property indicator_chart_window
 #property indicator_buffers 5
 #property indicator_plots   5
@@ -83,12 +83,12 @@ int OnInit()
     PlotIndexSetInteger(4, PLOT_DRAW_BEGIN, 1);
 
     //--- Nom court
-    IndicatorSetString(INDICATOR_SHORTNAME, "VWAP Daily");
+    IndicatorSetString(INDICATOR_SHORTNAME, "VWAP V12");
 
     //--- Précision
     IndicatorSetInteger(INDICATOR_DIGITS, _Digits);
 
-    Print("✅ VWAP Daily initialisé - Bandes ±1σ, ±2σ");
+    Print("✅ VWAP V12 initialisé - Bandes ±1σ, ±2σ");
     return(INIT_SUCCEEDED);
 }
 
