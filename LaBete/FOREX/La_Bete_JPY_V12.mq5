@@ -1,19 +1,19 @@
 //+------------------------------------------------------------------+
-//|                                           La_Bete_EUR_V11.mq5     |
+//|                                           La_Bete_JPY_V12.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| BOT SPÉCIALISÉ EUR/USD V11 - POWER TRADE STRATEGY                  |
-//| - MA2 × MA12 Crossover (High Frequency Trading)                   |
-//| - Support/Resistance Detection & Visualization (H1)               |
-//| - Buy/Sell Limit Orders on S/R Levels                            |
+//| BOT SPÉCIALISÉ USD/JPY V12 - VWAP QUALITY STRATEGY                 |
+//| - MA20 × MA50 Crossover (Qualité > Quantité)                     |
+//| - VWAP Daily + Bandes SD (Support/Résistance institutionnels)    |
 //| - Dynamic ATR-based SL/TP (Multiple Take Profits)                 |
 //| - Triple TP (50% / 30% / 20%) + BE + Trailing                     |
 //| - ForexFactory High Impact News EUR (15min pause)                 |
 //| - FTMO Protection (Daily -€2K, Total -€4K)                        |
+//| - Recommandé: Graphique M30 pour signaux optimaux                 |
 //+------------------------------------------------------------------+
 
 #property copyright "Yann - La Bête"
-#property version   "10.10"
+#property version   "12.00"
 #property strict
 
 //+------------------------------------------------------------------+
@@ -26,14 +26,14 @@
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
 //+------------------------------------------------------------------+
-input group "=== CONFIGURATION EUR/USD V10 ==="
+input group "=== CONFIGURATION USD/JPY V12 ==="
 input double   RiskPercent = 0.3;            // Risque par trade (%)
-input int      MagicNumber = 777100;         // Magic Number EUR
-input string   TradeComment = "LaBete_EUR_V11"; // Commentaire
+input int      MagicNumber = 777300;         // Magic Number EUR
+input string   TradeComment = "LaBete_JPY_V12"; // Commentaire
 
-input group "=== STRATÉGIE MA2 × MA12 ==="
-input int      MA_Fast = 2;                  // MA rapide (ultra court terme)
-input int      MA_Slow = 12;                 // MA lente (court terme)
+input group "=== STRATÉGIE MA20 × MA50 ==="
+input int      MA_Fast = 20;                 // MA rapide (qualité)
+input int      MA_Slow = 50;                 // MA lente (tendance)
 input int      MinConfluenceScore = 85;      // Score confluence minimum (/100) - ULTRA SÉLECTIF
 input int      MinCertaintyPercent = 80;     // Certitude minimum (%) - HAUTE QUALITÉ
 
@@ -61,13 +61,12 @@ input int      RSI_Period = 14;              // Période RSI
 input int      ATR_Period = 14;              // Période ATR
 input bool     CheckRSI = true;              // Éviter zones extrêmes RSI
 
-input group "=== SUPPORT / RÉSISTANCE ==="
-input bool     ShowSR = true;                // Afficher S/R sur graphique
-input ENUM_TIMEFRAMES SR_Timeframe = PERIOD_H1; // Timeframe pour S/R (H1 recommandé)
-input int      SR_Lookback = 50;             // Barres pour détecter S/R
-input int      SR_Strength = 2;              // Force S/R (nb touches min)
-input color    SupportColor = clrLime;       // Couleur Support
-input color    ResistanceColor = clrRed;     // Couleur Résistance
+input group "=== VWAP (Support/Résistance Institutionnels) ==="
+input bool     UseVWAP = true;               // Utiliser VWAP pour S/R
+input bool     ShowVWAPZones = true;         // Afficher zones VWAP sur graphique
+input color    SupportColor = clrLimeGreen;  // Couleur zone Support (VWAP -1σ)
+input color    ResistanceColor = clrOrangeRed; // Couleur zone Résistance (VWAP +1σ)
+input color    VWAPColor = clrDodgerBlue;    // Couleur VWAP centrale
 
 input group "=== ORDRES LIMITES SUR S/R ==="
 input bool     UseLimitOrders = false;       // Activer Buy/Sell Limit sur S/R - DÉSACTIVÉ (trop agressif)
@@ -87,7 +86,7 @@ input int      API_Timeout = 5000;           // Timeout API (ms)
 input group "=== NEWS ÉCONOMIQUES EUR ==="
 input bool     CheckEconomicNews = true;     // Vérifier news EUR HIGH IMPACT
 input int      NewsBufferMinutes = 15;       // 15min avant/après news
-input string   NewsCurrency = "EUR";         // Devise à filtrer
+input string   NewsCurrency = "JPY";         // Devise à filtrer
 
 input group "=== PROTECTION FTMO ==="
 input double   MaxDailyLoss = 2000;          // Limite daily loss (€)
@@ -107,16 +106,20 @@ CAccountInfo   account;
 int handleMA_Fast, handleMA_Slow;
 int handleRSI, handleATR;
 
-// Handles pour S/R sur H1
-int handleATR_H1;
+// V12: Handle VWAP sur H1
+int handleVWAP_H1;
 
 // Buffers
 double lastMA_Fast[], lastMA_Slow[];
 double lastRSI[], lastATR[];
 double lastHigh[], lastLow[], lastClose[], lastOpen[];
 
-// Buffers H1 pour S/R
-double lastHigh_H1[], lastLow_H1[], lastClose_H1[], lastATR_H1[];
+// V12: Buffers VWAP H1
+double vwap_H1[];          // VWAP centrale
+double vwapUpper1_H1[];    // Bande +1σ (résistance)
+double vwapLower1_H1[];    // Bande -1σ (support)
+double vwapUpper2_H1[];    // Bande +2σ (résistance extrême)
+double vwapLower2_H1[];    // Bande -2σ (support extrême)
 
 // État du système
 bool systemInitialized = false;
@@ -129,19 +132,17 @@ bool TP3_Hit = false;
 bool BE_Activated = false;
 bool Trailing_Active = false;
 
-// V10: Support/Résistance
-struct SRLevel {
-    double price;
-    int touches;
-    bool is_support;
-    datetime last_touch;
+// V12: VWAP Zones pour confluence
+struct VWAPZone {
+    double vwap;
+    double upper1;  // +1σ (résistance)
+    double lower1;  // -1σ (support)
+    double upper2;  // +2σ
+    double lower2;  // -2σ
     bool is_valid;
 };
 
-SRLevel supportLevels[5];
-SRLevel resistanceLevels[5];
-int supportCount = 0;
-int resistanceCount = 0;
+VWAPZone currentVWAP;
 
 // V10: Ordres Limites sur S/R
 struct LimitOrderInfo {
@@ -293,21 +294,22 @@ int OnInit()
     trade.SetTypeFilling(ORDER_FILLING_FOK);
     trade.SetAsyncMode(false);
 
-    // Initialiser les indicateurs (SMA au lieu de EMA)
+    // Initialiser les indicateurs (SMA)
     handleMA_Fast = iMA(_Symbol, PERIOD_CURRENT, MA_Fast, 0, MODE_SMA, PRICE_CLOSE);
     handleMA_Slow = iMA(_Symbol, PERIOD_CURRENT, MA_Slow, 0, MODE_SMA, PRICE_CLOSE);
     handleRSI = iRSI(_Symbol, PERIOD_CURRENT, RSI_Period, PRICE_CLOSE);
     handleATR = iATR(_Symbol, PERIOD_CURRENT, ATR_Period);
 
-    // Initialiser ATR sur H1 pour S/R
-    handleATR_H1 = iATR(_Symbol, SR_Timeframe, ATR_Period);
+    // V12: Initialiser VWAP sur H1 pour S/R
+    handleVWAP_H1 = iCustom(_Symbol, PERIOD_H1, "VWAP");
 
     // Vérifier les handles
     if(handleMA_Fast == INVALID_HANDLE || handleMA_Slow == INVALID_HANDLE ||
        handleRSI == INVALID_HANDLE || handleATR == INVALID_HANDLE ||
-       handleATR_H1 == INVALID_HANDLE)
+       handleVWAP_H1 == INVALID_HANDLE)
     {
         Print("❌ ERREUR: Impossible d'initialiser les indicateurs!");
+        Print("⚠️ Assurez-vous que VWAP.mq5 est compilé et dans le dossier Indicators!");
         return(INIT_FAILED);
     }
 
@@ -321,18 +323,15 @@ int OnInit()
     ArraySetAsSeries(lastClose, true);
     ArraySetAsSeries(lastOpen, true);
 
-    // Configurer arrays H1
-    ArraySetAsSeries(lastHigh_H1, true);
-    ArraySetAsSeries(lastLow_H1, true);
-    ArraySetAsSeries(lastClose_H1, true);
-    ArraySetAsSeries(lastATR_H1, true);
+    // V12: Configurer arrays VWAP H1
+    ArraySetAsSeries(vwap_H1, true);
+    ArraySetAsSeries(vwapUpper1_H1, true);
+    ArraySetAsSeries(vwapLower1_H1, true);
+    ArraySetAsSeries(vwapUpper2_H1, true);
+    ArraySetAsSeries(vwapLower2_H1, true);
 
-    // Initialiser S/R
-    for(int i = 0; i < 5; i++)
-    {
-        supportLevels[i].is_valid = false;
-        resistanceLevels[i].is_valid = false;
-    }
+    // Initialiser VWAP zones
+    currentVWAP.is_valid = false;
 
     // Initialiser ordres limites
     for(int i = 0; i < 10; i++)
@@ -347,7 +346,10 @@ int OnInit()
 
     systemInitialized = true;
 
-    Print("✅ Système EUR V10 initialisé avec succès");
+    Print("╔══════════════════════════════════════════════════════════╗");
+    Print("║          🐺 LA BÊTE EUR - V12 VWAP QUALITY TRADE 🐺      ║");
+    Print("╚══════════════════════════════════════════════════════════╝");
+    Print("✅ Système EUR V12 initialisé avec succès");
     Print("🔗 Guardian API: ", GuardianURL);
     Print("💰 Risque: ", RiskPercent, "% × ", riskMultiplier);
     Print("🎯 Confluence min: ", MinConfluenceScore, "/100");
@@ -355,13 +357,14 @@ int OnInit()
     Print("📏 SL: ATR × ", ATR_Multiplier_SL, " (", SL_MinPips, "-", SL_MaxPips, " pips)");
     Print("🎯 TP: 1:", TP1_RR, " / 1:", TP2_RR, " / 1:", TP3_RR);
     Print("════════════════════════════════════════════════════════");
-    Print("🆕 NOUVEAUTÉS V10:");
-    Print("📊 Stratégie: MA", MA_Fast, " × MA", MA_Slow, " Crossover");
-    Print("📈 S/R: ", (ShowSR ? "✅ ACTIVÉ" : "❌ OFF"), " (", EnumToString(SR_Timeframe), " | Lookback: ", SR_Lookback, " bars)");
+    Print("🆕 NOUVEAUTÉS V12 - VWAP STRATEGY:");
+    Print("📊 Signaux: MA", MA_Fast, " × MA", MA_Slow, " Crossover (M30 recommandé)");
+    Print("📈 S/R: ", (UseVWAP ? "✅ VWAP H1 + Bandes SD" : "❌ OFF"));
     Print("🎯 Ordres Limites: ", (UseLimitOrders ? "✅ ACTIVÉ" : "❌ OFF"),
           (UseLimitOrders ? " (Max: " + IntegerToString(MaxLimitOrders) + " | TP: 1:" + DoubleToString(LimitTP_RR, 1) + ")" : ""));
     Print("🛡️ FTMO: Daily -€", MaxDailyLoss, " | Total -€", MaxDrawdown);
     Print("📰 News: ", (CheckEconomicNews ? "✅ ACTIVÉ" : "❌ OFF (Crypto 24/7)"));
+    Print("💎 Qualité > Quantité - Win rate cible: 55-65%");
     Print("╚══════════════════════════════════════════════════════════╝");
 
     return(INIT_SUCCEEDED);
@@ -422,11 +425,11 @@ void OnTick()
         return;
     }
 
-    // V10: Détecter et afficher Support/Résistance
-    if(ShowSR)
+    // V12: Lire VWAP Zones depuis indicateur H1
+    if(UseVWAP)
     {
-        DetectSupportResistance();
-        DisplaySROnChart();
+        ReadVWAPZones();
+        DisplayVWAPZones();
     }
 
     // V10: Placer et gérer ordres limites sur S/R
@@ -571,207 +574,119 @@ void CheckFTMOLimits()
 }
 
 //+------------------------------------------------------------------+
-//| V10: Détection Support/Résistance sur H1                          |
+//| V12: Lecture VWAP Zones depuis indicateur H1                      |
 //+------------------------------------------------------------------+
-void DetectSupportResistance()
+void ReadVWAPZones()
 {
-    // Copier les données H1
-    if(CopyHigh(_Symbol, SR_Timeframe, 0, SR_Lookback, lastHigh_H1) < 0) return;
-    if(CopyLow(_Symbol, SR_Timeframe, 0, SR_Lookback, lastLow_H1) < 0) return;
-    if(CopyClose(_Symbol, SR_Timeframe, 0, SR_Lookback, lastClose_H1) < 0) return;
-    if(CopyBuffer(handleATR_H1, 0, 0, 1, lastATR_H1) < 0) return;
-
-    // Reset
-    supportCount = 0;
-    resistanceCount = 0;
-
-    for(int i = 0; i < 5; i++)
+    if(!UseVWAP)
     {
-        supportLevels[i].is_valid = false;
-        resistanceLevels[i].is_valid = false;
+        currentVWAP.is_valid = false;
+        return;
     }
 
-    // Chercher Swing Highs et Swing Lows sur H1
-    for(int i = SR_Strength; i < SR_Lookback - SR_Strength; i++)
+    // Lire les 5 buffers de VWAP H1
+    // Buffer 0: VWAP centrale
+    // Buffer 1: Upper Band +1σ
+    // Buffer 2: Lower Band -1σ
+    // Buffer 3: Upper Band +2σ
+    // Buffer 4: Lower Band -2σ
+
+    if(CopyBuffer(handleVWAP_H1, 0, 0, 3, vwap_H1) < 3)
     {
-        // RESISTANCE = Swing High (plus haut local)
-        bool isSwingHigh = true;
-        for(int j = 1; j <= SR_Strength; j++)
-        {
-            if(lastHigh_H1[i] <= lastHigh_H1[i-j] || lastHigh_H1[i] <= lastHigh_H1[i+j])
-            {
-                isSwingHigh = false;
-                break;
-            }
-        }
-
-        if(isSwingHigh && resistanceCount < 5)
-        {
-            // Vérifier que ce niveau n'est pas trop proche d'un existant
-            bool isDuplicate = false;
-            double tolerance = lastATR_H1[0] * 0.5;
-
-            for(int k = 0; k < resistanceCount; k++)
-            {
-                if(MathAbs(lastHigh_H1[i] - resistanceLevels[k].price) < tolerance)
-                {
-                    isDuplicate = true;
-                    resistanceLevels[k].touches++;
-                    break;
-                }
-            }
-
-            if(!isDuplicate)
-            {
-                resistanceLevels[resistanceCount].price = lastHigh_H1[i];
-                resistanceLevels[resistanceCount].touches = 1;
-                resistanceLevels[resistanceCount].is_support = false;
-                resistanceLevels[resistanceCount].last_touch = iTime(_Symbol, SR_Timeframe, i);
-                resistanceLevels[resistanceCount].is_valid = true;
-                resistanceCount++;
-            }
-        }
-
-        // SUPPORT = Swing Low (plus bas local)
-        bool isSwingLow = true;
-        for(int j = 1; j <= SR_Strength; j++)
-        {
-            if(lastLow_H1[i] >= lastLow_H1[i-j] || lastLow_H1[i] >= lastLow_H1[i+j])
-            {
-                isSwingLow = false;
-                break;
-            }
-        }
-
-        if(isSwingLow && supportCount < 5)
-        {
-            // Vérifier que ce niveau n'est pas trop proche d'un existant
-            bool isDuplicate = false;
-            double tolerance = lastATR_H1[0] * 0.5;
-
-            for(int k = 0; k < supportCount; k++)
-            {
-                if(MathAbs(lastLow_H1[i] - supportLevels[k].price) < tolerance)
-                {
-                    isDuplicate = true;
-                    supportLevels[k].touches++;
-                    break;
-                }
-            }
-
-            if(!isDuplicate)
-            {
-                supportLevels[supportCount].price = lastLow_H1[i];
-                supportLevels[supportCount].touches = 1;
-                supportLevels[supportCount].is_support = true;
-                supportLevels[supportCount].last_touch = iTime(_Symbol, SR_Timeframe, i);
-                supportLevels[supportCount].is_valid = true;
-                supportCount++;
-            }
-        }
+        Print("⚠️ Impossible de lire VWAP centrale");
+        currentVWAP.is_valid = false;
+        return;
     }
 
-    Print("📊 S/R détectés sur ", EnumToString(SR_Timeframe), ": ", supportCount, " Supports | ", resistanceCount, " Résistances");
+    if(CopyBuffer(handleVWAP_H1, 1, 0, 3, vwapUpper1_H1) < 3)
+    {
+        Print("⚠️ Impossible de lire VWAP Upper1");
+        currentVWAP.is_valid = false;
+        return;
+    }
+
+    if(CopyBuffer(handleVWAP_H1, 2, 0, 3, vwapLower1_H1) < 3)
+    {
+        Print("⚠️ Impossible de lire VWAP Lower1");
+        currentVWAP.is_valid = false;
+        return;
+    }
+
+    if(CopyBuffer(handleVWAP_H1, 3, 0, 3, vwapUpper2_H1) < 3)
+    {
+        Print("⚠️ Impossible de lire VWAP Upper2");
+        currentVWAP.is_valid = false;
+        return;
+    }
+
+    if(CopyBuffer(handleVWAP_H1, 4, 0, 3, vwapLower2_H1) < 3)
+    {
+        Print("⚠️ Impossible de lire VWAP Lower2");
+        currentVWAP.is_valid = false;
+        return;
+    }
+
+    // Stocker les valeurs actuelles
+    currentVWAP.vwap = vwap_H1[0];
+    currentVWAP.upper1 = vwapUpper1_H1[0];  // Résistance +1σ
+    currentVWAP.lower1 = vwapLower1_H1[0];  // Support -1σ
+    currentVWAP.upper2 = vwapUpper2_H1[0];  // Résistance +2σ
+    currentVWAP.lower2 = vwapLower2_H1[0];  // Support -2σ
+    currentVWAP.is_valid = true;
+
+    // Debug - afficher les valeurs
+    static datetime lastPrintTime = 0;
+    if(TimeCurrent() - lastPrintTime > 3600) // Toutes les heures
+    {
+        Print("📊 VWAP H1 Zones:");
+        Print("   Upper2 (+2σ): ", DoubleToString(currentVWAP.upper2, _Digits));
+        Print("   Upper1 (+1σ): ", DoubleToString(currentVWAP.upper1, _Digits), " ← Résistance");
+        Print("   VWAP:         ", DoubleToString(currentVWAP.vwap, _Digits));
+        Print("   Lower1 (-1σ): ", DoubleToString(currentVWAP.lower1, _Digits), " ← Support");
+        Print("   Lower2 (-2σ): ", DoubleToString(currentVWAP.lower2, _Digits));
+        lastPrintTime = TimeCurrent();
+    }
 }
 
 //+------------------------------------------------------------------+
-//| V10: Affichage Support/Résistance sur graphique                   |
+//| V12: Affichage VWAP Zones (indicateur déjà affiché sur graphique) |
 //+------------------------------------------------------------------+
-void DisplaySROnChart()
+void DisplayVWAPZones()
 {
-    // Supprimer anciens objets
-    DeleteAllSRObjects();
+    // V12: Le VWAP est affiché automatiquement par l'indicateur VWAP.mq5
+    // Cette fonction n'est conservée que pour compatibilité
+    // Les zones VWAP (±1σ, ±2σ) sont automatiquement tracées sur le graphique H1
 
-    // Récupérer ATR pour épaisseur des zones
-    double atr[];
-    ArraySetAsSeries(atr, true);
-    if(CopyBuffer(handleATR_H1, 0, 0, 1, atr) <= 0)
+    if(!ShowVWAPZones || !currentVWAP.is_valid)
         return;
 
-    double zoneThickness = atr[0] * 0.15; // Zone = 15% de l'ATR
-
+    // Optionnel: Afficher un label avec les niveaux actuels
     datetime timeNow = TimeCurrent();
-    datetime timeStart = timeNow - PeriodSeconds(PERIOD_H1) * 100; // 100 barres avant
-    datetime timeEnd = timeNow + PeriodSeconds(PERIOD_H1) * 50;    // 50 barres après
 
-    // Afficher Supports (ZONES rectangulaires)
-    for(int i = 0; i < supportCount; i++)
+    // Label VWAP info (mis à jour toutes les heures)
+    static datetime lastLabelUpdate = 0;
+    if(TimeCurrent() - lastLabelUpdate > 3600) // 1 heure
     {
-        if(supportLevels[i].is_valid)
-        {
-            string name = "SupportZone_" + IntegerToString(i);
+        string labelName = "VWAP_Info";
+        ObjectDelete(0, labelName);
 
-            double priceHigh = supportLevels[i].price + zoneThickness;
-            double priceLow = supportLevels[i].price - zoneThickness;
+        string info = "VWAP H1 Zones:\n";
+        info += "Résistance +1σ: " + DoubleToString(currentVWAP.upper1, _Digits) + "\n";
+        info += "VWAP: " + DoubleToString(currentVWAP.vwap, _Digits) + "\n";
+        info += "Support -1σ: " + DoubleToString(currentVWAP.lower1, _Digits);
 
-            // Créer ZONE rectangulaire
-            ObjectCreate(0, name, OBJ_RECTANGLE, 0, timeStart, priceHigh, timeEnd, priceLow);
-            ObjectSetInteger(0, name, OBJPROP_COLOR, SupportColor);
-            ObjectSetInteger(0, name, OBJPROP_FILL, true);
-            ObjectSetInteger(0, name, OBJPROP_BACK, true);
-            ObjectSetInteger(0, name, OBJPROP_WIDTH, 1);
-            ObjectSetInteger(0, name, OBJPROP_STYLE, STYLE_SOLID);
+        ObjectCreate(0, labelName, OBJ_LABEL, 0, 0, 0);
+        ObjectSetInteger(0, labelName, OBJPROP_CORNER, CORNER_LEFT_UPPER);
+        ObjectSetInteger(0, labelName, OBJPROP_XDISTANCE, 10);
+        ObjectSetInteger(0, labelName, OBJPROP_YDISTANCE, 100);
+        ObjectSetString(0, labelName, OBJPROP_TEXT, info);
+        ObjectSetInteger(0, labelName, OBJPROP_COLOR, VWAPColor);
+        ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 8);
 
-            // Label au centre de la zone
-            string labelName = "SupportLabel_" + IntegerToString(i);
-            ObjectCreate(0, labelName, OBJ_TEXT, 0, timeNow, supportLevels[i].price);
-            ObjectSetString(0, labelName, OBJPROP_TEXT, "━━ SUPPORT: " + DoubleToString(supportLevels[i].price, _Digits) + " ━━");
-            ObjectSetInteger(0, labelName, OBJPROP_COLOR, SupportColor);
-            ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 9);
-            ObjectSetInteger(0, labelName, OBJPROP_ANCHOR, ANCHOR_LEFT);
-        }
-    }
-
-    // Afficher Résistances (ZONES rectangulaires)
-    for(int i = 0; i < resistanceCount; i++)
-    {
-        if(resistanceLevels[i].is_valid)
-        {
-            string name = "ResistanceZone_" + IntegerToString(i);
-
-            double priceHigh = resistanceLevels[i].price + zoneThickness;
-            double priceLow = resistanceLevels[i].price - zoneThickness;
-
-            // Créer ZONE rectangulaire
-            ObjectCreate(0, name, OBJ_RECTANGLE, 0, timeStart, priceHigh, timeEnd, priceLow);
-            ObjectSetInteger(0, name, OBJPROP_COLOR, ResistanceColor);
-            ObjectSetInteger(0, name, OBJPROP_FILL, true);
-            ObjectSetInteger(0, name, OBJPROP_BACK, true);
-            ObjectSetInteger(0, name, OBJPROP_WIDTH, 1);
-            ObjectSetInteger(0, name, OBJPROP_STYLE, STYLE_SOLID);
-
-            // Label au centre de la zone
-            string labelName = "ResistanceLabel_" + IntegerToString(i);
-            ObjectCreate(0, labelName, OBJ_TEXT, 0, timeNow, resistanceLevels[i].price);
-            ObjectSetString(0, labelName, OBJPROP_TEXT, "━━ RESISTANCE: " + DoubleToString(resistanceLevels[i].price, _Digits) + " ━━");
-            ObjectSetInteger(0, labelName, OBJPROP_COLOR, ResistanceColor);
-            ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 9);
-            ObjectSetInteger(0, labelName, OBJPROP_ANCHOR, ANCHOR_LEFT);
-        }
+        lastLabelUpdate = TimeCurrent();
     }
 
     ChartRedraw();
-}
-
-//+------------------------------------------------------------------+
-//| Supprime tous les objets S/R                                      |
-//+------------------------------------------------------------------+
-void DeleteAllSRObjects()
-{
-    for(int i = ObjectsTotal(0, 0, -1) - 1; i >= 0; i--)
-    {
-        string name = ObjectName(0, i);
-
-        if(StringFind(name, "Support_") >= 0 ||
-           StringFind(name, "SupportZone_") >= 0 ||
-           StringFind(name, "Resistance_") >= 0 ||
-           StringFind(name, "ResistanceZone_") >= 0 ||
-           StringFind(name, "SupportLabel_") >= 0 ||
-           StringFind(name, "ResistanceLabel_") >= 0)
-        {
-            ObjectDelete(0, name);
-        }
-    }
 }
 
 //+------------------------------------------------------------------+
@@ -1145,7 +1060,7 @@ bool IsEconomicNewsSafe()
 //+------------------------------------------------------------------+
 void AnalyzeMarket()
 {
-    Print("🔍 Analyse EUR/USD V10 (MA", MA_Fast, " × MA", MA_Slow, ")...");
+    Print("🔍 Analyse USD/JPY V12 (MA", MA_Fast, " × MA", MA_Slow, " + VWAP H1)...");
 
     // 1. SIGNAL MA CROSSOVER
     bool crossUp = DetectCrossUp();    // MA2 croise MA12 vers le HAUT
@@ -1316,31 +1231,43 @@ int CalculateConfluence(string direction)
         Print("   ✓ RSI favorable (", DoubleToString(lastRSI[0], 1), "): +20 pts");
     }
 
-    // 3. Prix proche d'un Support (BUY) ou Résistance (SELL) (20 points)
+    // 3. V12: Prix dans zone VWAP (BUY près -1σ, SELL près +1σ) (25 points)
     double currentPrice = (direction == "BUY") ? SymbolInfoDouble(_Symbol, SYMBOL_ASK) : SymbolInfoDouble(_Symbol, SYMBOL_BID);
-    double tolerance = lastATR[0] * 0.3;
 
-    if(direction == "BUY")
+    if(currentVWAP.is_valid)
     {
-        for(int i = 0; i < supportCount; i++)
+        if(direction == "BUY")
         {
-            if(supportLevels[i].is_valid && MathAbs(currentPrice - supportLevels[i].price) < tolerance)
+            // BUY: Prix près du support VWAP -1σ (zone d'acheteurs)
+            double distanceToLower1 = MathAbs(currentPrice - currentVWAP.lower1);
+            double bandWidth = currentVWAP.upper1 - currentVWAP.lower1;
+
+            if(distanceToLower1 < bandWidth * 0.2) // Prix dans 20% de la bande support
             {
-                score += 20;
-                Print("   ✓ Prix proche Support: +20 pts");
-                break;
+                score += 25;
+                Print("   ✓ Prix dans zone VWAP Support (-1σ): +25 pts");
+            }
+            else if(currentPrice < currentVWAP.vwap) // Prix sous VWAP (zone acheteurs)
+            {
+                score += 15;
+                Print("   ✓ Prix sous VWAP (zone acheteurs): +15 pts");
             }
         }
-    }
-    else // SELL
-    {
-        for(int i = 0; i < resistanceCount; i++)
+        else // SELL
         {
-            if(resistanceLevels[i].is_valid && MathAbs(currentPrice - resistanceLevels[i].price) < tolerance)
+            // SELL: Prix près de la résistance VWAP +1σ (zone de vendeurs)
+            double distanceToUpper1 = MathAbs(currentPrice - currentVWAP.upper1);
+            double bandWidth = currentVWAP.upper1 - currentVWAP.lower1;
+
+            if(distanceToUpper1 < bandWidth * 0.2) // Prix dans 20% de la bande résistance
             {
-                score += 20;
-                Print("   ✓ Prix proche Résistance: +20 pts");
-                break;
+                score += 25;
+                Print("   ✓ Prix dans zone VWAP Résistance (+1σ): +25 pts");
+            }
+            else if(currentPrice > currentVWAP.vwap) // Prix au-dessus VWAP (zone vendeurs)
+            {
+                score += 15;
+                Print("   ✓ Prix au-dessus VWAP (zone vendeurs): +15 pts");
             }
         }
     }

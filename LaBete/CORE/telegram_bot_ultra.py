@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-LA BÊTE - BOT TELEGRAM ULTRA PROP FIRM V11
-Stratégie ultra-sélective + Commandes MT5 + Dashboard FTMO réel
+LA BÊTE - BOT TELEGRAM ULTRA PROP FIRM V12
+Stratégie VWAP + MA20×MA50 + Dashboard FTMO réel
 """
 
-VERSION = "11.0"  # V11 - Fix stratégie + Commandes MT5 + Vraies données FTMO
+VERSION = "12.0"  # V12 - VWAP Zones + MA20×MA50 Quality Strategy
 
 import sys
 import logging
