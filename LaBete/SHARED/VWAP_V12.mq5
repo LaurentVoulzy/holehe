@@ -120,11 +120,11 @@ int OnCalculate(const int rates_total,
 
         for(int j = dayStartIndex; j <= i; j++)
         {
-            double price = close[j];
+            double typicalPrice = (high[j] + low[j] + close[j]) / 3.0;
             double vol = (volume[j] > 0) ? (double)volume[j] : (double)tick_volume[j];
             if(vol <= 0) vol = 1;
 
-            sumPV += price * vol;
+            sumPV += typicalPrice * vol;
             sumV += vol;
         }
 
@@ -135,11 +135,11 @@ int OnCalculate(const int rates_total,
         double sumSquares = 0;
         for(int j = dayStartIndex; j <= i; j++)
         {
-            double price = close[j];
+            double typicalPrice = (high[j] + low[j] + close[j]) / 3.0;
             double vol = (volume[j] > 0) ? (double)volume[j] : (double)tick_volume[j];
             if(vol <= 0) vol = 1;
 
-            double diff = price - VWAPBuffer[i];
+            double diff = typicalPrice - VWAPBuffer[i];
             sumSquares += diff * diff * vol;
         }
 
