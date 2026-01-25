@@ -74,11 +74,11 @@ goto MENU
 
 :START_TELEGRAM
 echo.
-echo 📱 Démarrage Bot Telegram Ultra V10...
+echo 📱 Démarrage Bot Telegram Ultra V12...
 cd CORE
-start "Telegram Bot Ultra V10" cmd /k "python telegram_bot_ultra.py"
+start "Telegram Bot Ultra V12" cmd /k "python telegram_bot_ultra.py"
 cd ..
-echo ✅ Bot Telegram Ultra V10 démarré!
+echo ✅ Bot Telegram Ultra V12 démarré!
 goto MENU
 
 :START_ALL
@@ -100,12 +100,12 @@ cd ..
 timeout /t 2 /nobreak >nul
 echo ✅ Guardian CRYPTO OK
 
-echo [3/3] 📱 Bot Telegram Ultra V10...
+echo [3/3] 📱 Bot Telegram Ultra V12...
 cd CORE
-start "Telegram Bot Ultra V10" cmd /k "python telegram_bot_ultra.py"
+start "Telegram Bot Ultra V12" cmd /k "python telegram_bot_ultra.py"
 cd ..
 timeout /t 2 /nobreak >nul
-echo ✅ Bot Telegram Ultra V10 OK
+echo ✅ Bot Telegram Ultra V12 OK
 
 echo.
 echo ╔════════════════════════════════════════════════════════╗
@@ -116,13 +116,13 @@ echo ║  🐺 Guardian FOREX : http://localhost:5000            ║
 echo ║  💰 Guardian CRYPTO: http://localhost:5001            ║
 echo ║  📱 Telegram Bot   : Tapez /start                     ║
 echo ║                                                        ║
-echo ║  📊 Ouvrez maintenant MT5 et chargez les bots V10_1:    ║
-echo ║     - La_Bete_EUR_V10_1.mq5 sur EURUSD M30              ║
-echo ║     - La_Bete_GBP_V10_1.mq5 sur GBPUSD M30              ║
-echo ║     - La_Bete_JPY_V10_1.mq5 sur USDJPY M30              ║
-echo ║     - La_Bete_GOLD_V10_1.mq5 sur XAUUSD M30             ║
-echo ║     - La_Bete_BTC_V10_1.mq5 sur BTCUSD M30              ║
-echo ║     - La_Bete_ETH_V10_1.mq5 sur ETHUSD M30              ║
+echo ║  📊 Ouvrez maintenant MT5 et chargez les bots V12:    ║
+echo ║     - La_Bete_EUR_V12.mq5 sur EURUSD M30              ║
+echo ║     - La_Bete_GBP_V12.mq5 sur GBPUSD M30              ║
+echo ║     - La_Bete_JPY_V12.mq5 sur USDJPY M30              ║
+echo ║     - La_Bete_GOLD_V12.mq5 sur XAUUSD M30             ║
+echo ║     - La_Bete_BTC_V12.mq5 sur BTCUSD M30              ║
+echo ║     - La_Bete_ETH_V12.mq5 sur ETHUSD M30              ║
 echo ║                                                        ║
 echo ╚════════════════════════════════════════════════════════╝
 echo.
