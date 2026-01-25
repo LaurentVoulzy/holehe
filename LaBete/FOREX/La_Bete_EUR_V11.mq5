@@ -1,13 +1,14 @@
 //+------------------------------------------------------------------+
-//|                                           La_Bete_BTC_V10_1.mq5     |
+//|                                           La_Bete_EUR_V11.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| BOT SPÉCIALISÉ BTC/USD V10_1 - POWER TRADE STRATEGY                  |
+//| BOT SPÉCIALISÉ EUR/USD V11 - POWER TRADE STRATEGY                  |
 //| - MA2 × MA12 Crossover (High Frequency Trading)                   |
-//| - Support/Resistance Detection & Visualization                     |
+//| - Support/Resistance Detection & Visualization (H1)               |
+//| - Buy/Sell Limit Orders on S/R Levels                            |
 //| - Dynamic ATR-based SL/TP (Multiple Take Profits)                 |
 //| - Triple TP (50% / 30% / 20%) + BE + Trailing                     |
-//| - ForexFactory High Impact News (15min pause)                     |
+//| - ForexFactory High Impact News EUR (15min pause)                 |
 //| - FTMO Protection (Daily -€2K, Total -€4K)                        |
 //+------------------------------------------------------------------+
 
@@ -25,21 +26,21 @@
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
 //+------------------------------------------------------------------+
-input group "=== CONFIGURATION BTC/USD V10 ==="
-input double   RiskPercent = 0.25;           // Risque par trade (%)
-input int      MagicNumber = 777001;         // Magic Number ETH
-input string   TradeComment = "LaBete_BTC_V10_1"; // Commentaire
+input group "=== CONFIGURATION EUR/USD V10 ==="
+input double   RiskPercent = 0.3;            // Risque par trade (%)
+input int      MagicNumber = 777100;         // Magic Number EUR
+input string   TradeComment = "LaBete_EUR_V11"; // Commentaire
 
 input group "=== STRATÉGIE MA2 × MA12 ==="
 input int      MA_Fast = 2;                  // MA rapide (ultra court terme)
 input int      MA_Slow = 12;                 // MA lente (court terme)
-input int      MinConfluenceScore = 85;      // Score confluence minimum (/100)
-input int      MinCertaintyPercent = 80;     // Certitude minimum (%)
+input int      MinConfluenceScore = 85;      // Score confluence minimum (/100) - ULTRA SÉLECTIF
+input int      MinCertaintyPercent = 80;     // Certitude minimum (%) - HAUTE QUALITÉ
 
 input group "=== STOP LOSS / TAKE PROFIT (ATR) ==="
-input int      SL_MinPips = 50;              // SL minimum CRYPTO (pips)
-input int      SL_MaxPips = 200;             // SL maximum CRYPTO (pips)
-input double   ATR_Multiplier_SL = 2.5;      // ATR × 2.5 pour CRYPTO
+input int      SL_MinPips = 30;              // SL minimum EUR (pips)
+input int      SL_MaxPips = 100;             // SL maximum EUR (pips)
+input double   ATR_Multiplier_SL = 2.0;      // ATR × 2.0 pour EUR
 input double   TP1_RR = 2.0;                 // TP1 Risk:Reward 1:2
 input double   TP2_RR = 3.0;                 // TP2 Risk:Reward 1:3
 input double   TP3_RR = 5.0;                 // TP3 Risk:Reward 1:5
@@ -69,30 +70,31 @@ input color    SupportColor = clrLime;       // Couleur Support
 input color    ResistanceColor = clrRed;     // Couleur Résistance
 
 input group "=== ORDRES LIMITES SUR S/R ==="
-input bool     UseLimitOrders = false;        // Activer Buy/Sell Limit sur S/R
+input bool     UseLimitOrders = false;       // Activer Buy/Sell Limit sur S/R - DÉSACTIVÉ (trop agressif)
 input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
-input double   LimitOrderOffset = 25.0;      // Distance du S/R (pips) - marché respire
+input double   LimitOrderOffset = 15.0;      // Distance du S/R (pips) - marché respire
 input double   LimitSL_ATR_Multiplier = 1.5; // SL = ATR H1 × 1.5 (dynamique)
-input double   LimitSL_MinPips = 70.0;       // SL minimum CRYPTO (pips)
-input double   LimitSL_MaxPips = 180.0;      // SL maximum CRYPTO (pips)
+input double   LimitSL_MinPips = 30.0;       // SL minimum (pips)
+input double   LimitSL_MaxPips = 70.0;       // SL maximum (pips)
 input double   LimitTP_RR = 3.0;             // TP = SL × 3.0 pour ordres limites
 input int      LimitOrderExpiry = 240;       // Expiration ordres (min, 0=jamais)
 
 input group "=== API PYTHON GUARDIAN ==="
-input string   GuardianURL = "http://localhost:5001/validate_signal";
+input string   GuardianURL = "http://localhost:5000/validate_signal";
 input bool     RequireApproval = true;       // Requiert approbation Guardian
 input int      API_Timeout = 5000;           // Timeout API (ms)
 
-input group "=== NEWS ÉCONOMIQUES (CRYPTO = OFF) ==="
-input bool     CheckEconomicNews = false;    // Crypto = 24/7 (pas de news)
-input int      NewsBufferMinutes = 15;       // 15min avant/après (si activé)
+input group "=== NEWS ÉCONOMIQUES EUR ==="
+input bool     CheckEconomicNews = true;     // Vérifier news EUR HIGH IMPACT
+input int      NewsBufferMinutes = 15;       // 15min avant/après news
+input string   NewsCurrency = "EUR";         // Devise à filtrer
 
 input group "=== PROTECTION FTMO ==="
 input double   MaxDailyLoss = 2000;          // Limite daily loss (€)
 input double   MaxDrawdown = 4000;           // Limite drawdown total (€)
 input double   AlertDailyLoss = 1700;        // Alerte à 1700€
 input double   AlertDrawdown = 3500;         // Alerte à 3500€
-input int      MaxTradesPerDay = 2;         // Limite trades/jour
+input int      MaxTradesPerDay = 2;          // Limite trades/jour - MAX 2 TRADES (qualité > quantité)
 
 //+------------------------------------------------------------------+
 //| VARIABLES GLOBALES                                                |
@@ -270,16 +272,15 @@ void CheckAndExecuteCommands()
     }
 }
 
-
 //+------------------------------------------------------------------+
 //| Expert initialization function                                     |
 //+------------------------------------------------------------------+
 int OnInit()
 {
     Print("╔══════════════════════════════════════════════════════════╗");
-    Print("║          🐺 LA BÊTE BTC V10 POWER TRADE 🐺               ║");
+    Print("║          🐺 LA BÊTE EUR - V11 POWER TRADE 🐺               ║");
     Print("║     Stratégie MA2 × MA12 - High Frequency Trading        ║");
-    Print("║   Support/Résistance + Protection FTMO Renforcée         ║");
+    Print("║   Support/Résistance + Buy/Sell Limit + News EUR         ║");
     Print("╚══════════════════════════════════════════════════════════╝");
 
     // Vérifier symbole
@@ -346,7 +347,7 @@ int OnInit()
 
     systemInitialized = true;
 
-    Print("✅ Système BTC V10 initialisé avec succès");
+    Print("✅ Système EUR V10 initialisé avec succès");
     Print("🔗 Guardian API: ", GuardianURL);
     Print("💰 Risque: ", RiskPercent, "% × ", riskMultiplier);
     Print("🎯 Confluence min: ", MinConfluenceScore, "/100");
@@ -371,7 +372,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
-    Print("🛑 La Bête BTC V10 arrêtée. Raison: ", reason);
+    Print("🛑 La Bête EUR V10 arrêtée. Raison: ", reason);
 
     // Annuler tous les ordres limites actifs
     for(int i = 0; i < 10; i++)
@@ -1048,21 +1049,21 @@ void ManageLimitOrders()
         bool cancelOrder = false;
         string cancelReason = "";
 
-        // CONDITION 1 : S/R cassé (±40 pips pour CRYPTO)
+        // CONDITION 1 : S/R cassé (±20 pips pour FOREX)
         if(activeLimitOrders[i].is_buy)
         {
-            if(currentPrice < (activeLimitOrders[i].sr_level - pipValue * 40))
+            if(currentPrice < (activeLimitOrders[i].sr_level - pipValue * 20))
             {
                 cancelOrder = true;
-                cancelReason = "Support cassé -40 pips";
+                cancelReason = "Support cassé -20 pips";
             }
         }
         else
         {
-            if(currentPrice > (activeLimitOrders[i].sr_level + pipValue * 40))
+            if(currentPrice > (activeLimitOrders[i].sr_level + pipValue * 20))
             {
                 cancelOrder = true;
-                cancelReason = "Résistance cassée +40 pips";
+                cancelReason = "Résistance cassée +20 pips";
             }
         }
 
@@ -1144,7 +1145,7 @@ bool IsEconomicNewsSafe()
 //+------------------------------------------------------------------+
 void AnalyzeMarket()
 {
-    Print("🔍 Analyse BTC/USD V10 (MA", MA_Fast, " × MA", MA_Slow, ")...");
+    Print("🔍 Analyse EUR/USD V10 (MA", MA_Fast, " × MA", MA_Slow, ")...");
 
     // 1. SIGNAL MA CROSSOVER
     bool crossUp = DetectCrossUp();    // MA2 croise MA12 vers le HAUT
@@ -1545,7 +1546,7 @@ bool SendSignalToGuardian(SignalData &signal)
 void OpenPosition(SignalData &signal)
 {
     Print("════════════════════════════════════════");
-    Print("📈 OUVERTURE POSITION BTC/USD V10");
+    Print("📈 OUVERTURE POSITION ETH/USD V10");
     Print("════════════════════════════════════════");
     Print("Direction: ", signal.direction);
     Print("Entry: ", signal.entry_price);
@@ -1656,20 +1657,13 @@ void ManageOpenPositions()
                             BE_Activated = true;
                             Print("🛡️ BREAK EVEN activé @ ", newSL, " (", percentToTP1, "% vers TP1)");
 
-// Notification Telegram Break Even
-                            string beAlert = "🛡️ *BREAK EVEN ACTIVÉ*
-
-";
-                            beAlert += "Position sécurisée à BE!
-";
-                            beAlert += "SL déplacé: `" + DoubleToString(newSL, _Digits) + "`
-
-";
-                            beAlert += "📊 Progression: " + DoubleToString(percentToTP1, 1) + "% vers TP1
-";
+                            // Notification Telegram Break Even
+                            string beAlert = "🛡️ *BREAK EVEN ACTIVÉ*\n\n";
+                            beAlert += "Position sécurisée à BE!\n";
+                            beAlert += "SL déplacé: `" + DoubleToString(newSL, _Digits) + "`\n\n";
+                            beAlert += "📊 Progression: " + DoubleToString(percentToTP1, 1) + "% vers TP1\n";
                             beAlert += "✅ Plus de risque - Trade protégé!";
                             SendTelegramAlert(beAlert);
-                        }
                         }
                     }
                 }
@@ -1686,32 +1680,18 @@ void ManageOpenPositions()
                         TP3_Hit = true;
                         Print("🎯 TP3 ATTEINT! (1:", TP3_RR, ") → Fermé ", TP3_ClosePercent, "%");
 
-// Notification Telegram TP3 - MEGA WIN!
-                        string tp3Alert = "╔═══════════════════════════════╗
-";
-                        tp3Alert += "║  🚀 TP3 ATTEINT - MEGA WIN! 🚀 ║
-";
-                        tp3Alert += "╚═══════════════════════════════╝
-
-";
-                        tp3Alert += "🎉🎉🎉 *FÉLICITATIONS!* 🎉🎉🎉
-
-";
-                        tp3Alert += "💰 Take Profit 3 touché!
-";
-                        tp3Alert += "📊 Ratio: *1:" + DoubleToString(TP3_RR, 1) + "*
-";
-                        tp3Alert += "✅ Fermé " + DoubleToString(TP3_ClosePercent, 0) + "% de la position
-
-";
-                        tp3Alert += "███████████████████ 100%
-
-";
-                        tp3Alert += "🏆 TRADE PARFAIT - GG!
-";
+                        // Notification Telegram TP3 - MEGA WIN!
+                        string tp3Alert = "╔═══════════════════════════════╗\n";
+                        tp3Alert += "║  🚀 TP3 ATTEINT - MEGA WIN! 🚀 ║\n";
+                        tp3Alert += "╚═══════════════════════════════╝\n\n";
+                        tp3Alert += "🎉🎉🎉 *FÉLICITATIONS!* 🎉🎉🎉\n\n";
+                        tp3Alert += "💰 Take Profit 3 touché!\n";
+                        tp3Alert += "📊 Ratio: *1:" + DoubleToString(TP3_RR, 1) + "*\n";
+                        tp3Alert += "✅ Fermé " + DoubleToString(TP3_ClosePercent, 0) + "% de la position\n\n";
+                        tp3Alert += "███████████████████ 100%\n\n";
+                        tp3Alert += "🏆 TRADE PARFAIT - GG!\n";
                         tp3Alert += "💎 Maximum profit sécurisé! 💎";
                         SendTelegramAlert(tp3Alert);
-                    }
                     }
                 }
 
@@ -1725,32 +1705,18 @@ void ManageOpenPositions()
                         TP2_Hit = true;
                         Print("🎯 TP2 ATTEINT! (1:", TP2_RR, ") → Fermé ", TP2_ClosePercent, "%");
 
-// Notification Telegram TP2 - EXCELLENT!
-                        string tp2Alert = "╔═══════════════════════════════╗
-";
-                        tp2Alert += "║   🎯 TP2 ATTEINT - EXCELLENT!  ║
-";
-                        tp2Alert += "╚═══════════════════════════════╝
-
-";
-                        tp2Alert += "🎊 *SUPER TRADE!* 🎊
-
-";
-                        tp2Alert += "💰 Take Profit 2 touché!
-";
-                        tp2Alert += "📊 Ratio: *1:" + DoubleToString(TP2_RR, 1) + "*
-";
-                        tp2Alert += "✅ Fermé " + DoubleToString(TP2_ClosePercent, 0) + "% de la position
-
-";
-                        tp2Alert += "█████████████░░░░░░ 70%
-
-";
-                        tp2Alert += "📈 Reste 20% pour TP3!
-";
+                        // Notification Telegram TP2 - EXCELLENT!
+                        string tp2Alert = "╔═══════════════════════════════╗\n";
+                        tp2Alert += "║   🎯 TP2 ATTEINT - EXCELLENT!  ║\n";
+                        tp2Alert += "╚═══════════════════════════════╝\n\n";
+                        tp2Alert += "🎊 *SUPER TRADE!* 🎊\n\n";
+                        tp2Alert += "💰 Take Profit 2 touché!\n";
+                        tp2Alert += "📊 Ratio: *1:" + DoubleToString(TP2_RR, 1) + "*\n";
+                        tp2Alert += "✅ Fermé " + DoubleToString(TP2_ClosePercent, 0) + "% de la position\n\n";
+                        tp2Alert += "█████████████░░░░░░ 70%\n\n";
+                        tp2Alert += "📈 Reste 20% pour TP3!\n";
                         tp2Alert += "🚀 Let it run! 💰";
                         SendTelegramAlert(tp2Alert);
-                    }
                     }
                 }
 
@@ -1764,40 +1730,20 @@ void ManageOpenPositions()
                         TP1_Hit = true;
                         Print("🎯 TP1 ATTEINT! (1:", TP1_RR, ") → Fermé ", TP1_ClosePercent, "%");
 
-// Notification Telegram TP1 - NICE!
-                        string tp1Alert = "╔═══════════════════════════════╗
-";
-                        tp1Alert += "║    💰 TP1 ATTEINT - NICE! 💰   ║
-";
-                        tp1Alert += "╚═══════════════════════════════╝
-
-";
-                        tp1Alert += "✅ *PREMIER TAKE PROFIT!* ✅
-
-";
-                        tp1Alert += "🎯 Take Profit 1 touché!
-";
-                        tp1Alert += "📊 Ratio: *1:" + DoubleToString(TP1_RR, 1) + "*
-";
-                        tp1Alert += "✅ Fermé " + DoubleToString(TP1_ClosePercent, 0) + "% de la position
-
-";
-                        tp1Alert += "██████░░░░░░░░░░░░░ 30%
-
-";
-                        tp1Alert += "📈 Reste 70% en course!
-";
-                        tp1Alert += "🎯 Objectif TP2 & TP3!
-";
+                        // Notification Telegram TP1 - NICE!
+                        string tp1Alert = "╔═══════════════════════════════╗\n";
+                        tp1Alert += "║    💰 TP1 ATTEINT - NICE! 💰   ║\n";
+                        tp1Alert += "╚═══════════════════════════════╝\n\n";
+                        tp1Alert += "✅ *PREMIER TAKE PROFIT!* ✅\n\n";
+                        tp1Alert += "🎯 Take Profit 1 touché!\n";
+                        tp1Alert += "📊 Ratio: *1:" + DoubleToString(TP1_RR, 1) + "*\n";
+                        tp1Alert += "✅ Fermé " + DoubleToString(TP1_ClosePercent, 0) + "% de la position\n\n";
+                        tp1Alert += "██████░░░░░░░░░░░░░ 30%\n\n";
+                        tp1Alert += "📈 Reste 70% en course!\n";
+                        tp1Alert += "🎯 Objectif TP2 & TP3!\n";
                         if(TrailingAfterTP1)
                             tp1Alert += "🔄 Trailing activé - Let's go! 🚀";
                         SendTelegramAlert(tp1Alert);
-
-                        // Activer trailing après TP1
-                        if(TrailingAfterTP1)
-                        {
-                            Trailing_Active = true;
-                            Print("🔄 TRAILING activé après TP1");
 
                         // Activer trailing après TP1
                         if(TrailingAfterTP1)

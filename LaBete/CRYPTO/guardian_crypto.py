@@ -68,6 +68,38 @@ app = Flask(__name__)
 # COMMANDES MT5 (Fichier partagé)
 # ========================================
 COMMANDS_FILE = Path(__file__).parent.parent / "SHARED" / "commands.json"
+MT5_DB_PATH = Path(__file__).parent.parent / "SHARED" / "mt5_account_data.db"
+
+def get_mt5_account_data():
+    """Récupère les vraies données MT5 depuis la DB"""
+    try:
+        import sqlite3
+        conn = sqlite3.connect(MT5_DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT balance, equity, profit, margin_free, positions_count, orders_count
+            FROM account_snapshot
+            ORDER BY id DESC
+            LIMIT 1
+        ''')
+
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            return {
+                "balance": row[0],
+                "equity": row[1],
+                "profit": row[2],
+                "margin_free": row[3],
+                "positions_count": row[4],
+                "orders_count": row[5]
+            }
+        return None
+    except Exception as e:
+        logger.warning(f"⚠️ Impossible lire MT5 DB: {e}")
+        return None
 
 def write_command(currency: str, action: str, params: dict = None):
     """Écrit une commande pour MT5 dans le fichier partagé"""
@@ -939,17 +971,35 @@ def bot_status(currency):
 def bot_stats(currency):
     """Stats d'un bot spécifique (pour Telegram Bot)"""
     try:
-        stats = guardian.get_performance_stats()
-        return jsonify({
-            "currency": currency,
-            "total_trades": stats.get('total_signals', 0),
-            "winning_trades": stats.get('approved_signals', 0),
-            "losing_trades": stats.get('rejected_signals', 0),
-            "winrate": stats.get('approval_rate', 0),
-            "pnl": 0.0,
-            "open_positions": 0,
-            "enabled": True
-        })
+        # Récupérer VRAIES données MT5
+        mt5_data = get_mt5_account_data()
+
+        if mt5_data:
+            # Données réelles depuis MT5
+            stats = guardian.get_performance_stats()
+            return jsonify({
+                "currency": currency,
+                "total_trades": stats.get('total_signals', 0),
+                "winning_trades": stats.get('approved_signals', 0),
+                "losing_trades": stats.get('rejected_signals', 0),
+                "winrate": stats.get('approval_rate', 0),
+                "pnl": mt5_data['profit'],  # ✅ VRAIE DATA
+                "open_positions": mt5_data['positions_count'],  # ✅ VRAIE DATA
+                "enabled": True
+            })
+        else:
+            # Fallback si MT5 Reader pas encore lancé
+            stats = guardian.get_performance_stats()
+            return jsonify({
+                "currency": currency,
+                "total_trades": stats.get('total_signals', 0),
+                "winning_trades": stats.get('approved_signals', 0),
+                "losing_trades": stats.get('rejected_signals', 0),
+                "winrate": stats.get('approval_rate', 0),
+                "pnl": 0.0,
+                "open_positions": 0,
+                "enabled": True
+            })
     except Exception as e:
         logger.error(f"❌ Erreur bot_stats {currency}: {e}")
         return jsonify({"error": str(e)}), 500

@@ -1,0 +1,3 @@
+# Dépendances pour MT5 Reader
+MetaTrader5>=5.0.45
+schedule>=1.1.0

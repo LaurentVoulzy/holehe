@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-LA BÊTE - BOT TELEGRAM ULTRA PROP FIRM V10_2
-Version améliorée avec toutes les commandes rapides + notifications push
+LA BÊTE - BOT TELEGRAM ULTRA PROP FIRM V11
+Stratégie ultra-sélective + Commandes MT5 + Dashboard FTMO réel
 """
 
-VERSION = "10.20"  # V10_2 - Test synchronisation GitHub
+VERSION = "11.0"  # V11 - Fix stratégie + Commandes MT5 + Vraies données FTMO
 
 import sys
 import logging
