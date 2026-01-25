@@ -70,6 +70,8 @@ input color    VWAPColor = clrDodgerBlue;    // Couleur VWAP centrale
 
 input group "=== ORDRES LIMITES SUR S/R ==="
 input bool     UseLimitOrders = false;       // Activer Buy/Sell Limit sur S/R - DÉSACTIVÉ (trop agressif)
+input bool     ShowSR = false;               // Afficher S/R sur graphique
+input int      SR_Lookback = 100;            // Barres pour détection S/R
 input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
 input double   LimitOrderOffset = 15.0;      // Distance du S/R (pips) - marché respire
 input double   LimitSL_ATR_Multiplier = 1.5; // SL = ATR H1 × 1.5 (dynamique)
@@ -108,11 +110,13 @@ int handleRSI, handleATR;
 
 // V12: Handle VWAP sur H1
 int handleVWAP_H1;
+int handleATR_H1;  // ATR H1 pour ordres limites
 
 // Buffers
 double lastMA_Fast[], lastMA_Slow[];
 double lastRSI[], lastATR[];
 double lastHigh[], lastLow[], lastClose[], lastOpen[];
+double lastATR_H1[];  // Buffer ATR H1
 
 // V12: Buffers VWAP H1
 double vwap_H1[];          // VWAP centrale
@@ -143,6 +147,18 @@ struct VWAPZone {
 };
 
 VWAPZone currentVWAP;
+
+// V10: Support/Résistance
+struct SRLevel {
+    double price;
+    int touches;
+    bool is_valid;
+};
+
+SRLevel supportLevels[10];
+SRLevel resistanceLevels[10];
+int supportCount = 0;
+int resistanceCount = 0;
 
 // V10: Ordres Limites sur S/R
 struct LimitOrderInfo {
@@ -302,11 +318,12 @@ int OnInit()
 
     // V12: Initialiser VWAP sur H1 pour S/R
     handleVWAP_H1 = iCustom(_Symbol, PERIOD_H1, "VWAP_V12");
+    handleATR_H1 = iATR(_Symbol, PERIOD_H1, ATR_Period);
 
     // Vérifier les handles
     if(handleMA_Fast == INVALID_HANDLE || handleMA_Slow == INVALID_HANDLE ||
        handleRSI == INVALID_HANDLE || handleATR == INVALID_HANDLE ||
-       handleVWAP_H1 == INVALID_HANDLE)
+       handleVWAP_H1 == INVALID_HANDLE || handleATR_H1 == INVALID_HANDLE)
     {
         Print("❌ ERREUR: Impossible d'initialiser les indicateurs!");
         Print("⚠️ Assurez-vous que VWAP_V12.mq5 est compilé et dans le dossier Indicators!");
@@ -318,6 +335,7 @@ int OnInit()
     ArraySetAsSeries(lastMA_Slow, true);
     ArraySetAsSeries(lastRSI, true);
     ArraySetAsSeries(lastATR, true);
+    ArraySetAsSeries(lastATR_H1, true);
     ArraySetAsSeries(lastHigh, true);
     ArraySetAsSeries(lastLow, true);
     ArraySetAsSeries(lastClose, true);
@@ -386,13 +404,11 @@ void OnDeinit(const int reason)
         }
     }
 
-    // Nettoyer les objets graphiques S/R
-    DeleteAllSRObjects();
-
     IndicatorRelease(handleMA_Fast);
     IndicatorRelease(handleMA_Slow);
     IndicatorRelease(handleRSI);
     IndicatorRelease(handleATR);
+    IndicatorRelease(handleVWAP_H1);
     IndicatorRelease(handleATR_H1);
 }
 
@@ -481,6 +497,7 @@ bool UpdateIndicators()
     if(CopyBuffer(handleMA_Slow, 0, 0, 3, lastMA_Slow) < 0) return false;
     if(CopyBuffer(handleRSI, 0, 0, 3, lastRSI) < 0) return false;
     if(CopyBuffer(handleATR, 0, 0, 3, lastATR) < 0) return false;
+    if(CopyBuffer(handleATR_H1, 0, 0, 20, lastATR_H1) < 0) return false;
 
     // Copier les prix
     if(CopyHigh(_Symbol, PERIOD_CURRENT, 0, SR_Lookback, lastHigh) < 0) return false;
