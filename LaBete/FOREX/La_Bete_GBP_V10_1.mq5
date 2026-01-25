@@ -596,47 +596,71 @@ void DisplaySROnChart()
     // Supprimer anciens objets
     DeleteAllSRObjects();
 
-    // Afficher Supports
+    // Récupérer ATR pour épaisseur des zones
+    double atr[];
+    ArraySetAsSeries(atr, true);
+    if(CopyBuffer(handleATR_H1, 0, 0, 1, atr) <= 0)
+        return;
+
+    double zoneThickness = atr[0] * 0.15; // Zone = 15% de l'ATR
+
+    datetime timeNow = TimeCurrent();
+    datetime timeStart = timeNow - PeriodSeconds(PERIOD_H1) * 100; // 100 barres avant
+    datetime timeEnd = timeNow + PeriodSeconds(PERIOD_H1) * 50;    // 50 barres après
+
+    // Afficher Supports (ZONES rectangulaires)
     for(int i = 0; i < supportCount; i++)
     {
         if(supportLevels[i].is_valid)
         {
-            string name = "Support_" + IntegerToString(i);
+            string name = "SupportZone_" + IntegerToString(i);
 
-            ObjectCreate(0, name, OBJ_HLINE, 0, 0, supportLevels[i].price);
+            double priceHigh = supportLevels[i].price + zoneThickness;
+            double priceLow = supportLevels[i].price - zoneThickness;
+
+            // Créer ZONE rectangulaire
+            ObjectCreate(0, name, OBJ_RECTANGLE, 0, timeStart, priceHigh, timeEnd, priceLow);
             ObjectSetInteger(0, name, OBJPROP_COLOR, SupportColor);
-            ObjectSetInteger(0, name, OBJPROP_WIDTH, 2);
-            ObjectSetInteger(0, name, OBJPROP_STYLE, STYLE_SOLID);
+            ObjectSetInteger(0, name, OBJPROP_FILL, true);
             ObjectSetInteger(0, name, OBJPROP_BACK, true);
+            ObjectSetInteger(0, name, OBJPROP_WIDTH, 1);
+            ObjectSetInteger(0, name, OBJPROP_STYLE, STYLE_SOLID);
 
-            // Label
+            // Label au centre de la zone
             string labelName = "SupportLabel_" + IntegerToString(i);
-            ObjectCreate(0, labelName, OBJ_TEXT, 0, TimeCurrent(), supportLevels[i].price);
-            ObjectSetString(0, labelName, OBJPROP_TEXT, "S: " + DoubleToString(supportLevels[i].price, _Digits));
+            ObjectCreate(0, labelName, OBJ_TEXT, 0, timeNow, supportLevels[i].price);
+            ObjectSetString(0, labelName, OBJPROP_TEXT, "━━ SUPPORT: " + DoubleToString(supportLevels[i].price, _Digits) + " ━━");
             ObjectSetInteger(0, labelName, OBJPROP_COLOR, SupportColor);
-            ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 8);
+            ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 9);
+            ObjectSetInteger(0, labelName, OBJPROP_ANCHOR, ANCHOR_LEFT);
         }
     }
 
-    // Afficher Résistances
+    // Afficher Résistances (ZONES rectangulaires)
     for(int i = 0; i < resistanceCount; i++)
     {
         if(resistanceLevels[i].is_valid)
         {
-            string name = "Resistance_" + IntegerToString(i);
+            string name = "ResistanceZone_" + IntegerToString(i);
 
-            ObjectCreate(0, name, OBJ_HLINE, 0, 0, resistanceLevels[i].price);
+            double priceHigh = resistanceLevels[i].price + zoneThickness;
+            double priceLow = resistanceLevels[i].price - zoneThickness;
+
+            // Créer ZONE rectangulaire
+            ObjectCreate(0, name, OBJ_RECTANGLE, 0, timeStart, priceHigh, timeEnd, priceLow);
             ObjectSetInteger(0, name, OBJPROP_COLOR, ResistanceColor);
-            ObjectSetInteger(0, name, OBJPROP_WIDTH, 2);
-            ObjectSetInteger(0, name, OBJPROP_STYLE, STYLE_SOLID);
+            ObjectSetInteger(0, name, OBJPROP_FILL, true);
             ObjectSetInteger(0, name, OBJPROP_BACK, true);
+            ObjectSetInteger(0, name, OBJPROP_WIDTH, 1);
+            ObjectSetInteger(0, name, OBJPROP_STYLE, STYLE_SOLID);
 
-            // Label
+            // Label au centre de la zone
             string labelName = "ResistanceLabel_" + IntegerToString(i);
-            ObjectCreate(0, labelName, OBJ_TEXT, 0, TimeCurrent(), resistanceLevels[i].price);
-            ObjectSetString(0, labelName, OBJPROP_TEXT, "R: " + DoubleToString(resistanceLevels[i].price, _Digits));
+            ObjectCreate(0, labelName, OBJ_TEXT, 0, timeNow, resistanceLevels[i].price);
+            ObjectSetString(0, labelName, OBJPROP_TEXT, "━━ RESISTANCE: " + DoubleToString(resistanceLevels[i].price, _Digits) + " ━━");
             ObjectSetInteger(0, labelName, OBJPROP_COLOR, ResistanceColor);
-            ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 8);
+            ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 9);
+            ObjectSetInteger(0, labelName, OBJPROP_ANCHOR, ANCHOR_LEFT);
         }
     }
 
@@ -653,7 +677,9 @@ void DeleteAllSRObjects()
         string name = ObjectName(0, i);
 
         if(StringFind(name, "Support_") >= 0 ||
+           StringFind(name, "SupportZone_") >= 0 ||
            StringFind(name, "Resistance_") >= 0 ||
+           StringFind(name, "ResistanceZone_") >= 0 ||
            StringFind(name, "SupportLabel_") >= 0 ||
            StringFind(name, "ResistanceLabel_") >= 0)
         {
