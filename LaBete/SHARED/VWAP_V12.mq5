@@ -10,7 +10,7 @@
 
 #property copyright "Yann - La Bête"
 #property link      ""
-#property version   "12.00"
+#property version   "12.10"
 #property indicator_chart_window
 #property indicator_buffers 5
 #property indicator_plots   5
@@ -83,12 +83,12 @@ int OnInit()
     PlotIndexSetInteger(4, PLOT_DRAW_BEGIN, 1);
 
     //--- Nom court
-    IndicatorSetString(INDICATOR_SHORTNAME, "VWAP V12");
+    IndicatorSetString(INDICATOR_SHORTNAME, "VWAP V12.1");
 
     //--- Précision
     IndicatorSetInteger(INDICATOR_DIGITS, _Digits);
 
-    Print("✅ VWAP V12 initialisé - Bandes ±1σ, ±2σ");
+    Print("✅ VWAP V12.1 initialisé - Bandes ±1σ, ±2σ (FIX calcul cumulatif)");
     return(INIT_SUCCEEDED);
 }
 
