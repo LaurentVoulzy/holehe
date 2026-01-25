@@ -160,26 +160,13 @@ int OnCalculate(const int rates_total,
         limit = rates_total - prev_calculated;
     }
 
-    //--- Calcul VWAP et bandes
+    //--- Calcul VWAP et bandes (parcourir de l'ancien vers le récent)
+    double tempTPV = 0;
+    double tempVolume = 0;
+    double tempTPV2 = 0;
+
     for(int i = limit; i >= 0; i--)
     {
-        // Vérifier si nouvelle journée
-        MqlDateTime barDt;
-        TimeToStruct(time[i], barDt);
-        barDt.hour = 0;
-        barDt.min = 0;
-        barDt.sec = 0;
-        datetime barDayStart = StructToTime(barDt);
-
-        // Si nouvelle journée, reset
-        if(barDayStart != lastResetTime)
-        {
-            cumulativeTPV = 0;
-            cumulativeVolume = 0;
-            cumulativeTPV2 = 0;
-            lastResetTime = barDayStart;
-        }
-
         // Typical Price = (High + Low + Close) / 3
         double typicalPrice = (high[i] + low[i] + close[i]) / 3.0;
 
@@ -189,14 +176,31 @@ int OnCalculate(const int rates_total,
         if(vol <= 0)
             vol = 1; // Éviter division par zéro
 
+        // Vérifier si même journée que currentDayStart
+        MqlDateTime barDt;
+        TimeToStruct(time[i], barDt);
+        barDt.hour = 0;
+        barDt.min = 0;
+        barDt.sec = 0;
+        datetime barDayStart = StructToTime(barDt);
+
+        // Si nouvelle journée (changement), reset les cumuls temporaires
+        if(i == limit || barDayStart != lastResetTime)
+        {
+            tempTPV = 0;
+            tempVolume = 0;
+            tempTPV2 = 0;
+            lastResetTime = barDayStart;
+        }
+
         // Accumuler
-        cumulativeTPV += (typicalPrice * vol);
-        cumulativeVolume += vol;
+        tempTPV += (typicalPrice * vol);
+        tempVolume += vol;
 
         // Calculer VWAP
-        if(cumulativeVolume > 0)
+        if(tempVolume > 0)
         {
-            VWAPBuffer[i] = cumulativeTPV / cumulativeVolume;
+            VWAPBuffer[i] = tempTPV / tempVolume;
         }
         else
         {
@@ -205,10 +209,10 @@ int OnCalculate(const int rates_total,
 
         // Calculer variance pour Standard Deviation
         double deviation = typicalPrice - VWAPBuffer[i];
-        cumulativeTPV2 += (deviation * deviation * vol);
+        tempTPV2 += (deviation * deviation * vol);
 
         // Standard Deviation
-        double variance = (cumulativeVolume > 0) ? (cumulativeTPV2 / cumulativeVolume) : 0;
+        double variance = (tempVolume > 0) ? (tempTPV2 / tempVolume) : 0;
         double stdDev = MathSqrt(variance);
 
         // Bandes
@@ -217,6 +221,11 @@ int OnCalculate(const int rates_total,
         UpperBand2Buffer[i] = VWAPBuffer[i] + (2 * stdDev); // +2σ
         LowerBand2Buffer[i] = VWAPBuffer[i] - (2 * stdDev); // -2σ
     }
+
+    // Sauvegarder les cumuls pour la barre actuelle
+    cumulativeTPV = tempTPV;
+    cumulativeVolume = tempVolume;
+    cumulativeTPV2 = tempTPV2;
 
     //--- Retourner valeur de prev_calculated pour le prochain appel
     return(rates_total);
