@@ -19,25 +19,25 @@ bool SendTelegramMessage(string message)
     if(!EnableTelegramNotifications || TelegramBotToken == "" || TelegramChatID == "")
         return false;
 
-    string url = "https://api.telegram.org/bot" + TelegramBotToken + "/sendMessage";
-
     // Encoder le message pour URL
     string encodedMessage = message;
+    StringReplace(encodedMessage, "&", "%26");
+    StringReplace(encodedMessage, "<", "%3C");
+    StringReplace(encodedMessage, ">", "%3E");
     StringReplace(encodedMessage, "\n", "%0A");
     StringReplace(encodedMessage, " ", "%20");
     StringReplace(encodedMessage, "€", "%E2%82%AC");
     StringReplace(encodedMessage, "$", "%24");
+    StringReplace(encodedMessage, ":", "%3A");
 
-    string params = "chat_id=" + TelegramChatID + "&text=" + encodedMessage + "&parse_mode=HTML";
+    // Construire l'URL complète avec paramètres (méthode GET)
+    string url = "https://api.telegram.org/bot" + TelegramBotToken + "/sendMessage?chat_id=" + TelegramChatID + "&text=" + encodedMessage;
 
-    char post[];
     char result[];
-    string headers = "Content-Type: application/x-www-form-urlencoded\r\n";
-
-    ArrayResize(post, StringToCharArray(params, post, 0, WHOLE_ARRAY) - 1);
+    string headers;
 
     int timeout = 5000; // 5 secondes
-    int res = WebRequest("POST", url, headers, NULL, timeout, post, 0, result, headers);
+    int res = WebRequest("GET", url, "", NULL, timeout, result, 0, result, headers);
 
     if(res == -1)
     {
