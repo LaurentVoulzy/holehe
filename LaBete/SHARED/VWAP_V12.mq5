@@ -5,6 +5,7 @@
 //| VWAP V12 (Volume Weighted Average Price) avec Bandes SD          |
 //| - VWAP Daily (reset chaque jour à 00:00)                         |
 //| - Bandes ±1σ, ±2σ (Support/Résistance basés sur volume)         |
+//| - FIX V12.1: Calcul cumulatif corrigé                           |
 //| - Utilisé par La Bête V12 pour détecter zones institutionnelles  |
 //+------------------------------------------------------------------+
 
