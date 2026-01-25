@@ -74,6 +74,62 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # ========================================
+# COMMANDES MT5 (Fichier partagé)
+# ========================================
+COMMANDS_FILE = Path(__file__).parent.parent / "SHARED" / "commands.json"
+
+def write_command(currency: str, action: str, params: dict = None):
+    """Écrit une commande pour MT5 dans le fichier partagé"""
+    try:
+        # Lire les commandes existantes
+        if COMMANDS_FILE.exists():
+            with open(COMMANDS_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            data = {"commands": []}
+
+        # Ajouter la nouvelle commande
+        command = {
+            "currency": currency,
+            "action": action,
+            "timestamp": datetime.now().isoformat(),
+            "params": params or {}
+        }
+        data["commands"].append(command)
+
+        # Écrire dans le fichier
+        with open(COMMANDS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"✅ Commande écrite: {currency} → {action}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Erreur write_command: {e}")
+        return False
+
+def read_commands() -> List[dict]:
+    """Lit toutes les commandes en attente"""
+    try:
+        if COMMANDS_FILE.exists():
+            with open(COMMANDS_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get("commands", [])
+        return []
+    except Exception as e:
+        logger.error(f"❌ Erreur read_commands: {e}")
+        return []
+
+def clear_commands():
+    """Efface toutes les commandes"""
+    try:
+        with open(COMMANDS_FILE, 'w', encoding='utf-8') as f:
+            json.dump({"commands": []}, f, indent=2)
+        return True
+    except Exception as e:
+        logger.error(f"❌ Erreur clear_commands: {e}")
+        return False
+
+# ========================================
 # BASE DE DONNÉES
 # ========================================
 DB_PATH = Path(__file__).parent / "forex_trades.db"
@@ -1006,11 +1062,49 @@ def bot_disable(currency):
 def bot_close_all(currency):
     """Ferme toutes les positions d'un bot (pour Telegram Bot)"""
     try:
-        # TODO: Implémenter fermeture des positions
-        logger.warning(f"⚠️ Fermeture positions {currency} demandée (via Telegram)")
-        return jsonify({"success": True, "currency": currency, "closed_positions": 0})
+        logger.info(f"📌 Demande fermeture positions {currency} (via Telegram)")
+
+        # Écrire la commande pour MT5
+        success = write_command(currency, "CLOSE_ALL")
+
+        if success:
+            logger.info(f"✅ Commande CLOSE_ALL écrite pour {currency}")
+            return jsonify({
+                "success": True,
+                "currency": currency,
+                "message": "Commande envoyée à MT5",
+                "closed_positions": 0  # Sera mis à jour par MT5
+            })
+        else:
+            return jsonify({"error": "Échec écriture commande"}), 500
+
     except Exception as e:
         logger.error(f"❌ Erreur bot_close_all {currency}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/bot/<currency>/cancel_all', methods=['POST'])
+def bot_cancel_all(currency):
+    """Annule tous les ordres en attente d'un bot (pour Telegram Bot)"""
+    try:
+        logger.info(f"📌 Demande annulation ordres {currency} (via Telegram)")
+
+        # Écrire la commande pour MT5
+        success = write_command(currency, "CANCEL_ALL")
+
+        if success:
+            logger.info(f"✅ Commande CANCEL_ALL écrite pour {currency}")
+            return jsonify({
+                "success": True,
+                "currency": currency,
+                "message": "Commande envoyée à MT5",
+                "cancelled_orders": 0  # Sera mis à jour par MT5
+            })
+        else:
+            return jsonify({"error": "Échec écriture commande"}), 500
+
+    except Exception as e:
+        logger.error(f"❌ Erreur bot_cancel_all {currency}: {e}")
         return jsonify({"error": str(e)}), 500
 
 

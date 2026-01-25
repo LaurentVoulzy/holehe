@@ -649,6 +649,67 @@ class UltraPropFirmBot:
 
         await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='Markdown')
 
+    async def all_close_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/all_close - Fermer IMMÉDIATEMENT toutes les positions (sans confirmation)"""
+        await update.message.reply_text("⏳ Fermeture immédiate de toutes les positions...")
+
+        closed_count = 0
+        errors = []
+
+        for currency in BOTS_CONFIG.keys():
+            try:
+                api = BOTS_CONFIG[currency]['api']
+                response = requests.post(f"{api}/bot/{currency}/close_all", timeout=5)
+                if response.status_code == 200:
+                    data = response.json()
+                    closed = data.get('closed_positions', 0)
+                    closed_count += closed
+                    logger.info(f"✅ {currency}: {closed} position(s) fermée(s)")
+                else:
+                    errors.append(f"{currency}: HTTP {response.status_code}")
+                    logger.error(f"❌ {currency}: HTTP {response.status_code}")
+            except Exception as e:
+                errors.append(f"{currency}: {str(e)}")
+                logger.error(f"❌ {currency}: {e}")
+
+        # Message final
+        message = f"✅ *FERMETURE IMMÉDIATE*\n\n{closed_count} position(s) fermée(s)"
+        if errors:
+            message += f"\n\n⚠️ Erreurs:\n" + "\n".join(f"• {err}" for err in errors)
+
+        await update.message.reply_text(message, parse_mode='Markdown')
+
+    async def all_cancel_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/all_cancel - Annuler TOUS les ordres en attente (pending orders)"""
+        await update.message.reply_text("⏳ Annulation de tous les ordres en attente...")
+
+        cancelled_count = 0
+        errors = []
+
+        for currency in BOTS_CONFIG.keys():
+            try:
+                api = BOTS_CONFIG[currency]['api']
+                # Nouvelle route API à ajouter dans les Guardians
+                response = requests.post(f"{api}/bot/{currency}/cancel_all", timeout=5)
+                if response.status_code == 200:
+                    data = response.json()
+                    cancelled = data.get('cancelled_orders', 0)
+                    cancelled_count += cancelled
+                    logger.info(f"✅ {currency}: {cancelled} ordre(s) annulé(s)")
+                else:
+                    errors.append(f"{currency}: HTTP {response.status_code}")
+                    logger.error(f"❌ {currency}: HTTP {response.status_code}")
+            except Exception as e:
+                errors.append(f"{currency}: {str(e)}")
+                logger.error(f"❌ {currency}: {e}")
+
+        # Message final
+        message = f"✅ *ANNULATION ORDRES*\n\n{cancelled_count} ordre(s) annulé(s)"
+        if errors:
+            message += f"\n\n⚠️ Erreurs:\n" + "\n".join(f"• {err}" for err in errors)
+
+        await update.message.reply_text(message, parse_mode='Markdown')
+
     async def notify_on_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """/notify_on - Activer notifications"""
         self.notifications_enabled = True
@@ -1320,6 +1381,8 @@ class UltraPropFirmBot:
         self.application.add_handler(CommandHandler("positions", self.positions_command))
         self.application.add_handler(CommandHandler("daily", self.daily_command))
         self.application.add_handler(CommandHandler("close_all", self.close_all_command))
+        self.application.add_handler(CommandHandler("all_close", self.all_close_command))
+        self.application.add_handler(CommandHandler("all_cancel", self.all_cancel_command))
         self.application.add_handler(CommandHandler("notify_on", self.notify_on_command))
         self.application.add_handler(CommandHandler("notify_off", self.notify_off_command))
         self.application.add_handler(CommandHandler("calendar", self.calendar_command))
