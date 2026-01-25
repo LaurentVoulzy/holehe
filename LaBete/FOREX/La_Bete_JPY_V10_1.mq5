@@ -190,6 +190,90 @@ struct SignalData {
 };
 
 //+------------------------------------------------------------------+
+//| Vérifie et exécute les commandes du Guardian                      |
+//+------------------------------------------------------------------+
+void CheckAndExecuteCommands()
+{
+    string commandsPath = "commands.json";
+    int fileHandle = FileOpen(commandsPath, FILE_READ|FILE_TXT|FILE_COMMON);
+
+    if(fileHandle == INVALID_HANDLE)
+        return; // Fichier n'existe pas ou erreur
+
+    string fileContent = "";
+    while(!FileIsEnding(fileHandle))
+    {
+        fileContent += FileReadString(fileHandle);
+    }
+    FileClose(fileHandle);
+
+    // Vérifier si notre devise est mentionnée ou si c'est une commande globale
+    string mySymbol = _Symbol;
+    if(StringFind(mySymbol, "EUR") >= 0) mySymbol = "EUR";
+    else if(StringFind(mySymbol, "GBP") >= 0) mySymbol = "GBP";
+    else if(StringFind(mySymbol, "JPY") >= 0) mySymbol = "JPY";
+    else if(StringFind(mySymbol, "XAU") >= 0) mySymbol = "GOLD";
+    else if(StringFind(mySymbol, "BTC") >= 0) mySymbol = "BTC";
+    else if(StringFind(mySymbol, "ETH") >= 0) mySymbol = "ETH";
+
+    // Chercher les commandes pour notre devise
+    if(StringFind(fileContent, "\"currency\": \"" + mySymbol + "\"") < 0 &&
+       StringFind(fileContent, "\"currency\": \"ALL\"") < 0)
+        return; // Pas de commande pour nous
+
+    // CLOSE_ALL: Fermer toutes les positions
+    if(StringFind(fileContent, "\"action\": \"CLOSE_ALL\"") >= 0)
+    {
+        Print("📌 Commande CLOSE_ALL reçue du Guardian");
+        int closedCount = 0;
+
+        for(int i = PositionsTotal() - 1; i >= 0; i--)
+        {
+            if(position.SelectByIndex(i))
+            {
+                if(position.Symbol() == _Symbol && position.Magic() == MagicNumber)
+                {
+                    if(trade.PositionClose(position.Ticket()))
+                    {
+                        closedCount++;
+                        Print("✅ Position fermée: ", position.Ticket());
+                    }
+                }
+            }
+        }
+
+        Print("✅ CLOSE_ALL exécuté: ", closedCount, " position(s) fermée(s)");
+    }
+
+    // CANCEL_ALL: Annuler tous les ordres en attente
+    if(StringFind(fileContent, "\"action\": \"CANCEL_ALL\"") >= 0)
+    {
+        Print("📌 Commande CANCEL_ALL reçue du Guardian");
+        int canceledCount = 0;
+
+        for(int i = OrdersTotal() - 1; i >= 0; i--)
+        {
+            ulong ticket = OrderGetTicket(i);
+            if(ticket > 0)
+            {
+                if(OrderGetString(ORDER_SYMBOL) == _Symbol &&
+                   OrderGetInteger(ORDER_MAGIC) == MagicNumber)
+                {
+                    if(trade.OrderDelete(ticket))
+                    {
+                        canceledCount++;
+                        Print("✅ Ordre annulé: ", ticket);
+                    }
+                }
+            }
+        }
+
+        Print("✅ CANCEL_ALL exécuté: ", canceledCount, " ordre(s) annulé(s)");
+    }
+}
+
+
+//+------------------------------------------------------------------+
 //| Expert initialization function                                     |
 //+------------------------------------------------------------------+
 int OnInit()
@@ -315,6 +399,9 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
 {
+    // Vérifier commandes Guardian (AVANT tout - commandes d'urgence)
+    CheckAndExecuteCommands();
+
     if(!IsNewBar())
         return;
 
