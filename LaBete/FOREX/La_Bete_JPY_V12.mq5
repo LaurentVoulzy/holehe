@@ -1657,6 +1657,14 @@ void ManageOpenPositions()
                         tp3Alert += "🏆 TRADE PARFAIT - GG!\n";
                         tp3Alert += "💎 Maximum profit sécurisé! 💎";
                         SendTelegramAlert(tp3Alert);
+
+                        // Notification Telegram direct TP3
+                        if(EnableTelegramNotifications)
+                        {
+                            double profit = position.Profit();
+                            NotifyPositionClosed(_Symbol, position.Type(), position.Volume(),
+                                                position.PriceOpen(), currentPrice, profit, "TP3 (20%) - PERFECT!");
+                        }
                     }
                 }
 
@@ -1682,6 +1690,14 @@ void ManageOpenPositions()
                         tp2Alert += "📈 Reste 20% pour TP3!\n";
                         tp2Alert += "🚀 Let it run! 💰";
                         SendTelegramAlert(tp2Alert);
+
+                        // Notification Telegram direct TP2
+                        if(EnableTelegramNotifications)
+                        {
+                            double profit = position.Profit();
+                            NotifyPositionClosed(_Symbol, position.Type(), position.Volume(),
+                                                position.PriceOpen(), currentPrice, profit, "TP2 (30%)");
+                        }
                     }
                 }
 
@@ -1709,6 +1725,14 @@ void ManageOpenPositions()
                         if(TrailingAfterTP1)
                             tp1Alert += "🔄 Trailing activé - Let's go! 🚀";
                         SendTelegramAlert(tp1Alert);
+
+                        // Notification Telegram direct TP1
+                        if(EnableTelegramNotifications)
+                        {
+                            double profit = position.Profit();
+                            NotifyPositionClosed(_Symbol, position.Type(), position.Volume(),
+                                                position.PriceOpen(), currentPrice, profit, "TP1 (50%)");
+                        }
 
                         // Activer trailing après TP1
                         if(TrailingAfterTP1)
