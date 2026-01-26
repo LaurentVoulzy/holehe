@@ -1,0 +1,60 @@
+; Fichier de paramètres AGRESSIF pour Backtest - La Bete BTC V12
+; Plus de trades, moins sélectif
+; Période recommandée: 01/12/2025 - 26/01/2026 (2 mois)
+
+; === CONFIGURATION BTC/USD V12 ===
+RiskPercent=0.25
+MagicNumber=777001
+TradeComment=LaBete_BTC_V12_AGGRESSIVE
+
+; === STRATÉGIE MA20 × MA50 (MOINS SÉLECTIF) ===
+MA_Fast=20
+MA_Slow=50
+MinConfluenceScore=70||Score confluence minimum||65||95||5
+MinCertaintyPercent=65||Certitude minimum||60||90||5
+
+; === STOP LOSS / TAKE PROFIT (ATR) ===
+SL_MinPips=50
+SL_MaxPips=150
+ATR_Multiplier_SL=2.0
+TP1_RR=2.0
+TP2_RR=3.0
+TP3_RR=5.0
+
+; === PARTIAL CLOSES ===
+TP1_ClosePercent=50.0
+TP2_ClosePercent=30.0
+TP3_ClosePercent=20.0
+
+; === BREAK EVEN & TRAILING ===
+BE_ActivationPercent=50.0
+BE_OffsetPips=10
+TrailingAfterTP1=1
+Trailing_ATR_Multiplier=0.5
+
+; === INDICATEURS ===
+RSI_Period=14
+ATR_Period=14
+CheckRSI=1
+
+; === VWAP ===
+UseVWAP=1
+ShowVWAPZones=0
+
+; === ORDRES LIMITES ===
+UseLimitOrders=0
+ShowSR=0
+
+; === PYTHON GUARDIAN (DÉSACTIVÉ) ===
+RequireApproval=0
+
+; === NEWS (DÉSACTIVÉ) ===
+CheckEconomicNews=0
+
+; === PROTECTION FTMO ===
+MaxDailyLoss=2000
+MaxDrawdown=4000
+MaxTradesPerDay=3
+
+; === TELEGRAM (DÉSACTIVÉ) ===
+EnableTelegramNotifications=0
