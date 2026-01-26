@@ -22,7 +22,7 @@
 #include <Trade\Trade.mqh>
 #include <Trade\PositionInfo.mqh>
 #include <Trade\AccountInfo.mqh>
-#include "../SHARED/TelegramNotify.mqh"
+#include <SHARED\TelegramNotify.mqh>
 
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
