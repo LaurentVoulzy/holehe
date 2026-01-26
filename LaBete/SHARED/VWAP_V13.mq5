@@ -2,14 +2,14 @@
 //|                                                  VWAP_V12.mq5     |
 //|                                    Copyright 2025, Yann - La Bête |
 //|                                                                    |
-//| VWAP V12 - SIMPLIFIÉ (comme VWAP market qui fonctionne)          |
+//| VWAP V13 - SIMPLIFIÉ (comme VWAP market qui fonctionne)          |
 //| - Reset daily                                                     |
 //| - Bandes ±1σ, ±2σ                                                |
 //+------------------------------------------------------------------+
 
 #property copyright "Yann - La Bête"
 #property link      ""
-#property version   "12.10"
+#property version   "13.00"
 #property indicator_chart_window
 #property indicator_buffers 5
 #property indicator_plots   5
@@ -65,10 +65,10 @@ int OnInit()
     SetIndexBuffer(3, UpperBand2Buffer, INDICATOR_DATA);
     SetIndexBuffer(4, LowerBand2Buffer, INDICATOR_DATA);
 
-    IndicatorSetString(INDICATOR_SHORTNAME, "VWAP V12.1");
+    IndicatorSetString(INDICATOR_SHORTNAME, "VWAP V13");
     IndicatorSetInteger(INDICATOR_DIGITS, _Digits);
 
-    Print("✅ VWAP V12.1 initialisé - Version simplifiée");
+    Print("✅ VWAP V13 initialisé - Version simplifiée");
     return(INIT_SUCCEEDED);
 }
 

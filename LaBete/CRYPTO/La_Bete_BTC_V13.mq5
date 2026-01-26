@@ -1,8 +1,8 @@
 //+------------------------------------------------------------------+
-//|                                           La_Bete_EUR_V12.mq5     |
+//|                                           La_Bete_BTC_V13.mq5     |
 //|                                    Copyright 2025, Yann - La Bête  |
 //|                                                                      |
-//| BOT SPÉCIALISÉ EUR/USD V12 - VWAP QUALITY STRATEGY                 |
+//| BOT SPÉCIALISÉ BTC/USD V13 - VWAP QUALITY STRATEGY                 |
 //| - MA20 × MA50 Crossover (Qualité > Quantité)                     |
 //| - VWAP Daily + Bandes SD (Support/Résistance institutionnels)    |
 //| - Dynamic ATR-based SL/TP (Multiple Take Profits)                 |
@@ -13,7 +13,7 @@
 //+------------------------------------------------------------------+
 
 #property copyright "Yann - La Bête"
-#property version   "12.00"
+#property version   "13.00"
 #property strict
 
 //+------------------------------------------------------------------+
@@ -27,10 +27,10 @@
 //+------------------------------------------------------------------+
 //| PARAMÈTRES INPUTS                                                 |
 //+------------------------------------------------------------------+
-input group "=== CONFIGURATION EUR/USD V12 ==="
-input double   RiskPercent = 0.3;            // Risque par trade (%)
-input int      MagicNumber = 777100;         // Magic Number EUR
-input string   TradeComment = "LaBete_EUR_V12"; // Commentaire
+input group "=== CONFIGURATION BTC/USD V13 ==="
+input double   RiskPercent = 0.25;            // Risque par trade (%)
+input int      MagicNumber = 777001;         // Magic Number EUR
+input string   TradeComment = "LaBete_BTC_V13"; // Commentaire
 
 input group "=== STRATÉGIE MA20 × MA50 ==="
 input int      MA_Fast = 20;                 // MA rapide (qualité)
@@ -39,8 +39,8 @@ input int      MinConfluenceScore = 85;      // Score confluence minimum (/100) 
 input int      MinCertaintyPercent = 80;     // Certitude minimum (%) - HAUTE QUALITÉ
 
 input group "=== STOP LOSS / TAKE PROFIT (ATR) ==="
-input int      SL_MinPips = 30;              // SL minimum EUR (pips)
-input int      SL_MaxPips = 100;             // SL maximum EUR (pips)
+input int      SL_MinPips = 50;              // SL minimum EUR (pips)
+input int      SL_MaxPips = 150;             // SL maximum EUR (pips)
 input double   ATR_Multiplier_SL = 2.0;      // ATR × 2.0 pour EUR
 input double   TP1_RR = 2.0;                 // TP1 Risk:Reward 1:2
 input double   TP2_RR = 3.0;                 // TP2 Risk:Reward 1:3
@@ -76,7 +76,7 @@ input int      SR_Lookback = 100;            // Barres pour détection S/R
 input int      MaxLimitOrders = 3;           // Max ordres limites simultanés
 input double   LimitOrderOffset = 15.0;      // Distance du S/R (pips) - marché respire
 input double   LimitSL_ATR_Multiplier = 1.5; // SL = ATR H1 × 1.5 (dynamique)
-input double   LimitSL_MinPips = 30.0;       // SL minimum (pips)
+input double   LimitSL_MinPips = 50.0;       // SL minimum (pips)
 input double   LimitSL_MaxPips = 70.0;       // SL maximum (pips)
 input double   LimitTP_RR = 3.0;             // TP = SL × 3.0 pour ordres limites
 input int      LimitOrderExpiry = 240;       // Expiration ordres (min, 0=jamais)
@@ -87,9 +87,9 @@ input bool     RequireApproval = true;       // Requiert approbation Guardian
 input int      API_Timeout = 5000;           // Timeout API (ms)
 
 input group "=== NEWS ÉCONOMIQUES EUR ==="
-input bool     CheckEconomicNews = true;     // Vérifier news EUR HIGH IMPACT
+input bool     CheckEconomicNews = false;     // Vérifier news EUR HIGH IMPACT
 input int      NewsBufferMinutes = 15;       // 15min avant/après news
-input string   NewsCurrency = "EUR";         // Devise à filtrer
+input string   NewsCurrency = "BTC";         // Devise à filtrer
 
 input group "=== PROTECTION FTMO ==="
 input double   MaxDailyLoss = 2000;          // Limite daily loss (€)
@@ -114,7 +114,7 @@ CAccountInfo   account;
 int handleMA_Fast, handleMA_Slow;
 int handleRSI, handleATR;
 
-// V12: Handle VWAP sur H1
+// V13: Handle VWAP sur H1
 int handleVWAP_H1;
 int handleATR_H1;  // ATR H1 pour ordres limites
 
@@ -124,7 +124,7 @@ double lastRSI[], lastATR[];
 double lastHigh[], lastLow[], lastClose[], lastOpen[];
 double lastATR_H1[];  // Buffer ATR H1
 
-// V12: Buffers VWAP H1
+// V13: Buffers VWAP H1
 double vwap_H1[];          // VWAP centrale
 double vwapUpper1_H1[];    // Bande +1σ (résistance)
 double vwapLower1_H1[];    // Bande -1σ (support)
@@ -142,7 +142,7 @@ bool TP3_Hit = false;
 bool BE_Activated = false;
 bool Trailing_Active = false;
 
-// V12: VWAP Zones pour confluence
+// V13: VWAP Zones pour confluence
 struct VWAPZone {
     double vwap;
     double upper1;  // +1σ (résistance)
@@ -153,7 +153,6 @@ struct VWAPZone {
 };
 
 VWAPZone currentVWAP;
-
 // V10: Support/Résistance
 struct SRLevel {
     double price;
@@ -322,8 +321,8 @@ int OnInit()
     handleRSI = iRSI(_Symbol, PERIOD_CURRENT, RSI_Period, PRICE_CLOSE);
     handleATR = iATR(_Symbol, PERIOD_CURRENT, ATR_Period);
 
-    // V12: Initialiser VWAP sur H1 pour S/R
-    handleVWAP_H1 = iCustom(_Symbol, PERIOD_H1, "VWAP_V12");
+    // V13: Initialiser VWAP sur H1 pour S/R
+    handleVWAP_H1 = iCustom(_Symbol, PERIOD_H1, "VWAP_V13");
     handleATR_H1 = iATR(_Symbol, PERIOD_H1, ATR_Period);
 
     // Vérifier les handles
@@ -332,7 +331,7 @@ int OnInit()
        handleVWAP_H1 == INVALID_HANDLE || handleATR_H1 == INVALID_HANDLE)
     {
         Print("❌ ERREUR: Impossible d'initialiser les indicateurs!");
-        Print("⚠️ Assurez-vous que VWAP_V12.mq5 est compilé et dans le dossier Indicators!");
+        Print("⚠️ Assurez-vous que VWAP_V13.mq5 est compilé et dans le dossier Indicators!");
         return(INIT_FAILED);
     }
 
@@ -347,7 +346,7 @@ int OnInit()
     ArraySetAsSeries(lastClose, true);
     ArraySetAsSeries(lastOpen, true);
 
-    // V12: Configurer arrays VWAP H1
+    // V13: Configurer arrays VWAP H1
     ArraySetAsSeries(vwap_H1, true);
     ArraySetAsSeries(vwapUpper1_H1, true);
     ArraySetAsSeries(vwapLower1_H1, true);
@@ -394,7 +393,7 @@ int OnInit()
     // Notification Telegram démarrage
     if(EnableTelegramNotifications)
     {
-        NotifyBotStarted(_Symbol, "La Bete EUR V12", "12.00");
+        NotifyBotStarted(_Symbol, "La Bete BTC V13", "13.00");
     }
 
     return(INIT_SUCCEEDED);
@@ -415,6 +414,8 @@ void OnDeinit(const int reason)
             trade.OrderDelete(activeLimitOrders[i].ticket);
         }
     }
+
+    // Nettoyer les objets graphiques S/R
 
     IndicatorRelease(handleMA_Fast);
     IndicatorRelease(handleMA_Slow);
@@ -453,7 +454,7 @@ void OnTick()
         return;
     }
 
-    // V12: Lire VWAP Zones depuis indicateur H1
+    // V13: Lire VWAP Zones depuis indicateur H1
     if(UseVWAP)
     {
         ReadVWAPZones();
@@ -603,7 +604,7 @@ void CheckFTMOLimits()
 }
 
 //+------------------------------------------------------------------+
-//| V12: Lecture VWAP Zones depuis indicateur H1                      |
+//| V13: Lecture VWAP Zones depuis indicateur H1                      |
 //+------------------------------------------------------------------+
 void ReadVWAPZones()
 {
@@ -678,11 +679,11 @@ void ReadVWAPZones()
 }
 
 //+------------------------------------------------------------------+
-//| V12: Affichage VWAP Zones (indicateur déjà affiché sur graphique) |
+//| V13: Affichage VWAP Zones (indicateur déjà affiché sur graphique) |
 //+------------------------------------------------------------------+
 void DisplayVWAPZones()
 {
-    // V12: Le VWAP est affiché automatiquement par l'indicateur VWAP_V12.mq5
+    // V13: Le VWAP est affiché automatiquement par l'indicateur VWAP_V13.mq5
     // Cette fonction n'est conservée que pour compatibilité
     // Les zones VWAP (±1σ, ±2σ) sont automatiquement tracées sur le graphique H1
 
@@ -1089,7 +1090,7 @@ bool IsEconomicNewsSafe()
 //+------------------------------------------------------------------+
 void AnalyzeMarket()
 {
-    Print("🔍 Analyse EUR/USD V12 (MA", MA_Fast, " × MA", MA_Slow, " + VWAP H1)...");
+    Print("🔍 Analyse BTC/USD V12 (MA", MA_Fast, " × MA", MA_Slow, " + VWAP H1)...");
 
     // 1. SIGNAL MA CROSSOVER
     bool crossUp = DetectCrossUp();    // MA2 croise MA12 vers le HAUT
@@ -1260,7 +1261,7 @@ int CalculateConfluence(string direction)
         Print("   ✓ RSI favorable (", DoubleToString(lastRSI[0], 1), "): +20 pts");
     }
 
-    // 3. V12: Prix dans zone VWAP (BUY près -1σ, SELL près +1σ) (25 points)
+    // 3. V13: Prix dans zone VWAP (BUY près -1σ, SELL près +1σ) (25 points)
     double currentPrice = (direction == "BUY") ? SymbolInfoDouble(_Symbol, SYMBOL_ASK) : SymbolInfoDouble(_Symbol, SYMBOL_BID);
 
     if(currentVWAP.is_valid)
