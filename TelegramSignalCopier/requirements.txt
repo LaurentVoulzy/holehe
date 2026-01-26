@@ -1,0 +1,7 @@
+# Telegram Signal Copier - Dépendances Python
+
+# Telegram Bot API
+python-telegram-bot==20.7
+
+# Utilitaires
+python-dotenv==1.0.0

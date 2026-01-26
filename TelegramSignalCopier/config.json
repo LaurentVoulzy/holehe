@@ -1,0 +1,13 @@
+{
+  "telegram": {
+    "bot_token": "8530848109:AAE0VkNIWpvDBuqUi0nZeXlluURnEMOHuwE",
+    "authorized_chat_id": "1981386789"
+  },
+  "mt5": {
+    "signals_folder": "C:/Trading/LaBete/SIGNALS"
+  },
+  "settings": {
+    "auto_cleanup_days": 7,
+    "max_tps": 3
+  }
+}
