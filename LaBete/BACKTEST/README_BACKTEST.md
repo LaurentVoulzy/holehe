@@ -1,14 +1,14 @@
-# 📊 GUIDE BACKTEST - LA BETE V12
+# 📊 GUIDE BACKTEST - LA BETE V13
 
 ## 📁 FICHIERS .SET DISPONIBLES
 
-### 1️⃣ `La_Bete_BTC_V12_BACKTEST.set` (RECOMMANDÉ)
+### 1️⃣ `La_Bete_BTC_V13_BACKTEST.set` (RECOMMANDÉ)
 **Paramètres par défaut:**
 - MinConfluenceScore: 85
 - MinCertaintyPercent: 80
 - Très sélectif, haute qualité
 
-### 2️⃣ `La_Bete_BTC_V12_AGGRESSIVE.set`
+### 2️⃣ `La_Bete_BTC_V13_AGGRESSIVE.set`
 **Plus de trades:**
 - MinConfluenceScore: 70
 - MinCertaintyPercent: 65
@@ -43,7 +43,7 @@ Dans MT5, ouvrir Strategy Tester → Onglet "Paramètres" → Bouton "Charger" �
 
 | Paramètre | Valeur |
 |-----------|--------|
-| **Expert Advisor** | La_Bete_BTC_V12 |
+| **Expert Advisor** | La_Bete_BTC_V13 |
 | **Symbole** | BTCUSD |
 | **Période** | M30 |
 | **Date début** | 01/12/2025 |
@@ -59,7 +59,7 @@ Dans MT5, ouvrir Strategy Tester → Onglet "Paramètres" → Bouton "Charger" �
 **Dans Strategy Tester:**
 1. Onglet **"Paramètres"**
 2. Bouton **"Charger"** (en haut à droite)
-3. Sélectionner: `La_Bete_BTC_V12_BACKTEST.set`
+3. Sélectionner: `La_Bete_BTC_V13_BACKTEST.set`
 4. Vérifier que les paramètres sont chargés
 
 **Paramètres importants automatiquement configurés:**
@@ -102,21 +102,21 @@ Cliquer sur **"Démarrer"**
 
 ### Test 1️⃣ - BASELINE (2 mois)
 ```
-Fichier: La_Bete_BTC_V12_BACKTEST.set
+Fichier: La_Bete_BTC_V13_BACKTEST.set
 Période: 01/12/2025 - 26/01/2026
 But: Validation fonctionnelle
 ```
 
 ### Test 2️⃣ - AGRESSIF (2 mois)
 ```
-Fichier: La_Bete_BTC_V12_AGGRESSIVE.set
+Fichier: La_Bete_BTC_V13_AGGRESSIVE.set
 Période: 01/12/2025 - 26/01/2026
 But: Plus de trades, comparaison
 ```
 
 ### Test 3️⃣ - LONG TERME (6 mois)
 ```
-Fichier: La_Bete_BTC_V12_BACKTEST.set
+Fichier: La_Bete_BTC_V13_BACKTEST.set
 Période: 01/08/2025 - 26/01/2026
 But: Validation robustesse
 ```
@@ -132,7 +132,7 @@ But: Validation robustesse
 
 ### ✅ FONCTIONNERA:
 - Stratégie MA20 × MA50 ✅
-- VWAP H1 + Bandes SD ✅
+- VWAP V13 H1 + Bandes SD (Typical Price) ✅
 - ATR dynamic SL/TP ✅
 - Triple TP (TP1/TP2/TP3) ✅
 - Break Even ✅

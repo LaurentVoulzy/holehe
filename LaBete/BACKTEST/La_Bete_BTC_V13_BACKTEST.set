@@ -1,0 +1,79 @@
+; Fichier de paramètres pour Backtest - La Bete BTC V13
+; Optimisé pour Strategy Tester MT5
+; Période recommandée: 01/12/2025 - 26/01/2026 (2 mois)
+
+; === CONFIGURATION BTC/USD V13 ===
+RiskPercent=0.25
+MagicNumber=777001
+TradeComment=LaBete_BTC_V13_BACKTEST
+
+; === STRATÉGIE MA20 × MA50 ===
+MA_Fast=20
+MA_Slow=50
+MinConfluenceScore=85||Score confluence minimum||65||95||5
+MinCertaintyPercent=80||Certitude minimum||60||90||5
+
+; === STOP LOSS / TAKE PROFIT (ATR) ===
+SL_MinPips=50
+SL_MaxPips=150
+ATR_Multiplier_SL=2.0||Multiplicateur ATR SL||1.5||3.0||0.5
+TP1_RR=2.0||TP1 Risk:Reward||1.5||3.0||0.5
+TP2_RR=3.0||TP2 Risk:Reward||2.0||4.0||0.5
+TP3_RR=5.0||TP3 Risk:Reward||3.0||6.0||0.5
+
+; === PARTIAL CLOSES ===
+TP1_ClosePercent=50.0
+TP2_ClosePercent=30.0
+TP3_ClosePercent=20.0
+
+; === BREAK EVEN & TRAILING ===
+BE_ActivationPercent=50.0
+BE_OffsetPips=10
+TrailingAfterTP1=1
+Trailing_ATR_Multiplier=0.5
+
+; === INDICATEURS ===
+RSI_Period=14
+ATR_Period=14
+CheckRSI=1
+
+; === VWAP (Support/Résistance Institutionnels) ===
+UseVWAP=1
+ShowVWAPZones=0
+SupportColor=65280
+ResistanceColor=255
+VWAPColor=16748574
+
+; === ORDRES LIMITES SUR S/R ===
+UseLimitOrders=0
+ShowSR=0
+SR_Lookback=100
+MaxLimitOrders=3
+LimitOrderOffset=15.0
+LimitSL_ATR_Multiplier=1.5
+LimitSL_MinPips=50.0
+LimitSL_MaxPips=70.0
+LimitTP_RR=3.0
+LimitOrderExpiry=240
+
+; === API PYTHON GUARDIAN ===
+GuardianURL=http://localhost:5000/validate_signal
+RequireApproval=0
+API_Timeout=5000
+
+; === NEWS ÉCONOMIQUES ===
+CheckEconomicNews=0
+NewsBufferMinutes=15
+NewsCurrency=BTC
+
+; === PROTECTION FTMO ===
+MaxDailyLoss=2000
+MaxDrawdown=4000
+AlertDailyLoss=1700
+AlertDrawdown=3500
+MaxTradesPerDay=2
+
+; === NOTIFICATIONS TELEGRAM ===
+TelegramBotToken=
+TelegramChatID=
+EnableTelegramNotifications=0
