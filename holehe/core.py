@@ -157,8 +157,10 @@ def export_csv(data,args,email):
         now = datetime.now()
         timestamp = datetime.timestamp(now)
         name_file="holehe_"+str(round(timestamp))+"_"+email+"_results.csv"
+        # Union de toutes les clés (ordre préservé par dict.fromkeys)
+        all_keys = list(dict.fromkeys(k for d in data for k in d.keys()))
         with open(name_file, 'w', encoding='utf8', newline='') as output_file:
-            fc = csv.DictWriter(output_file,fieldnames=data[0].keys())
+            fc = csv.DictWriter(output_file, fieldnames=all_keys, restval="", extrasaction="ignore")
             fc.writeheader()
             fc.writerows(data)
         exit("All results have been exported to "+name_file)
@@ -170,6 +172,8 @@ async def launch_module(module,email, client, out):
     except Exception:
         name=str(module).split('<function ')[1].split(' ')[0]
         out.append({"name": name,"domain":data[name],
+                    "method": "unknown",
+                    "frequent_rate_limit": False,
                     "rateLimit": False,
                     "error": True,
                     "exists": False,
