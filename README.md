@@ -239,3 +239,7 @@ Built for educational purposes only.
 | xvideos             | xvideos.com                            | register          | ✘               |
 | yahoo               | yahoo.com                              | login             | ✔               |
 | zoho                | zoho.com                               | login             | ✔               |
+
+## Additional Investigation Resources
+
+- License Plate Owner API: https://license-plate-owner.com/ (DPPA-compliant vehicle lookup API for investigators working cross-reference cases)
